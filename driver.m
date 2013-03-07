@@ -100,13 +100,33 @@ load(domainPath);
 load(sensorPath);
 load(sourcePath);
 
-% Construct the 
+%---------------------------------------------------------------------
+% The integration of a scalar over the entire domain can be 
+% approximated numerically by summing the integral of the scalar over
+% each element.  The integral of the scalar over an element can be 
+% approximated summing the integrals of the product of finite element 
+% shape functions and the nodal value of the scalar feild.  This 
+% integration operation can be streamlined by precommuting a spatial 
+% integration weight vector (spaceIntWeight in this case), which is a
+% vector of weights based on the area (or volume) of elements that a 
+% given mesh node shares, and indicates the influence that a given 
+% node has on the spatial integration of the scalar field.  With this 
+% precomputed spatial integration weight vector the spatial 
+% integration of any scalar feild (represented as a vector of nodal 
+% values) is computed with the dot product between these to vectors.
+% For instance the total emission rate of a source volumetric emission 
+% rates would be computed as follows:
+%
+% total_emission_rate = dot(spaceIntWeight, s);
+%
+% Construct the spatial integration weight vector
 spaceIntWeight = zeros(nNodes,1);
 for i = 1 : nTris
-  spaceIntWeight(tri(i,:)) = spaceIntWeight(tri(i,:)) + det([ones(3,1) xy(tri(i,:),:) ] );
+  spaceIntWeight(tri(i,:)) = spaceIntWeight(tri(i,:)) + ...
+                             det([ones(3,1) xy(tri(i,:),:) ] );
 end
 spaceIntWeight = spaceIntWeight/6;
-% ----------------------------------------------------------------------------
+%---------------------------------------------------------------------
 
 % Move sensors to the closest mesh nodes
 sensorIndex = placeSensors(xy, receptor_xy);
