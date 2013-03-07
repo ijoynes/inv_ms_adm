@@ -150,17 +150,23 @@ E = placeSources(tri, xy, source_xy, source_m);
 m_star = dot(spaceIntWeight,E);
 save(sensorPath, 'sensorIndex', '-append')
 
-% Re
+% Reorient the domain such that the lower left corner has the 
+% coordinate (0,0)
 xy = xy - ones(nNodes,1)*min(xy);
+
+% Create the time step vector
 dt = 1;
 t = (0:dt:tMax)';
-
-
 nt = length(t);
+
 
 c_0 = zeros(nNodes,1);
 
-% -----------------------------------------------------------------------------
+% --------------------------------------------------------------------
+% If an initial source guess is present in the file path
+%   simDir/Source/Source_0.mat
+% then load that inital guess.  However if no initial guess is present
+% assume an all zero initial guess and save it.
 if exist(fullfile(simDir,'Source','Source_0.mat'))==2
   load(fullfile(simDir,'Source','Source_0.mat'),'s');
   E_0 = s;
@@ -170,35 +176,79 @@ else
   save(fullfile(simDir,'Source','Source_0.mat'),'s');
 end
 
+% Save the volumetric source emission rate profile of the known source 
+% with its total emission rate.
 save(fullfile(simDir, 'Source', 'Source_Correct.mat'), 'E','m_star');
 
+% Compute the evolution of the plume from the known source
 SolveConcentrationTransport(t,E,c_0,'o',noise);
+
+% Pre-allocate space for the synthetic and candidate receptor 
+% observations
 signal_o=nan(nt,length(sensorIndex));
 signal_c=nan(nt,length(sensorIndex));
+
+% Extract the synthetic receptor observations from the known source
 for i = 1 : nt
-  load(fullfile(simDir, 'Observation', ['Observation_' int2str(i-1) '.mat']),'o')
-  if noise > 0
-  load(fullfile(simDir, 'Noise', ['Noise_' int2str(i-1) '.mat']), 'o_error')
-  signal_o(i,:) = o(sensorIndex) + o_error(sensorIndex);
-
+  load(fullfile(simDir, 'Observation', ...
+                  ['Observation_' int2str(i-1) '.mat']),'o')
+  if noise > 0 || noise == -1 % add noise to the receptor observations
+    load(fullfile(simDir, 'Noise', ...
+                    ['Noise_' int2str(i-1) '.mat']), 'o_error')
+    signal_o(i,:) = o(sensorIndex) + o_error(sensorIndex);
   else
-  signal_o(i,:) = o(sensorIndex);
-end
+    signal_o(i,:) = o(sensorIndex);
+  end
 end
 
-save(fullfile(simDir,'Source','Source_Correct.mat'), 'E','signal_o');
+% Append the synthetic receptor observations to the known source file
+save(fullfile(simDir,'Source','Source_Correct.mat'), ...
+  'E','signal_o', 'm_star');
 
+% These should be global variables
 save(paramPath,'t', 'c_0', 'boundary', 'sensorIndex','nNodes', 'nt','tri','xy','E')
-
+% This should also be a global variable
 nPass = 0;
 save(passPath,'nPass');
 
-fn = @objective;
-x0 = E_0;
-lb = zeros(nNodes,1);
-ub = Inf*ones(nNodes,1);
-nbd = ones(nNodes,1);
+% Set the parameters for the operation of the L-BFGS-B routines
+fn = @objective;          % objective function handle
 
+x0 = E_0;                 % initial parameter estimate
+                          %   In this case the source parameters 
+                          %   represent the nodal values of the 
+                          %   volumeteric source emission rate.
+                          
+lb = zeros(nNodes,1);     % lower bound on parameter search space
+                          %   Setting this lower bound to zero ensures
+                          %   that unphyiscal negative sources (sinks) 
+                          %   are not predicted. This will need to be 
+                          %   adjusted in future implementations if 
+                          %   the source parameters x represent 
+                          %   quantities other than volumetric 
+                          %   emission rate (e.g. source location). 
+
+ub = Inf*ones(nNodes,1);  % upper bound on parameter search space
+                          %   Since the is no upper bound on the 
+                          %   volumetric emission rate, this vector is 
+                          %   not used by the L-BFGS-B routines and 
+                          %   can assume any value.  A value of +ve 
+                          %   infinity is assigned for clarity on the 
+                          %   intent of the use of the upper bound
+
+nbd = ones(nNodes,1);     % the search space bound types
+                          % nbd(i)=0 if x(i) is unbounded,
+                          %        1 if x(i) has only a lower bound
+                          %        2 if x(i) has lower & upper bounds
+                          %        3 if x(i) has only an upper bound 
+
+% Setup the L-BFGS-B options
+%   iprint  controls the frequency and type of output
+%   maxits  maximum number of iterations
+%   factr   exit criteria for small changes to the objective function
+%   pgtol   exit criteria for small changes to the gradient
+%   m       number of histories to use to approximate the Hessian
+%   cb      callback function handle
 opts = lbfgs_options('iprint', iprint, ...
                      'maxits', maxIter, ...
                      'factr', factr, ...
