@@ -129,10 +129,24 @@ spaceIntWeight = spaceIntWeight/6;
 %---------------------------------------------------------------------
 
 % Move sensors to the closest mesh nodes
+% This step could be ignored if an observation matrix H was 
+% constructed to perform a weighted average of the concentration at 
+% the nodes of the element which contains the receptor.  The weights 
+% would be the values of the finite element shape functions at the 
+% location of the receptor. 
 sensorIndex = placeSensors(xy, receptor_xy);
 
 % Determine discrete representation of the emission source
+% Again, this function moves the sources to the nodest mesh nodes.
+% The volumetric emission rate of each source is scaled by the inverse
+% of the size of the element such that a custer of large or small 
+% elements would have the same total emission rate.
 E = placeSources(tri, xy, source_xy, source_m);
+
+% Compute the total emission rate in kg/s of the known source by 
+% integrating the volumetric source emission rate over the spatial 
+% domain.  This integration is approximated numerically with the 
+% spatial integration weight vector.  
 m_star = dot(spaceIntWeight,E);
 save(sensorPath, 'sensorIndex', '-append')
 
