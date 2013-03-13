@@ -33,17 +33,72 @@ function [simDir, operDir, tMax, noise, maxIter, reg_par, factr, ...
 %               associated will a minimum Gaussian noise standard 
 %               deviation of ~19.24 mg/m^3.
 %
+%   maxIter   The maximum number of iterations attempted by the
+%               Inverse Micro-Scale Dispersion Model.  The default
+%               value is 200 iterations.
+%
+%   reg_par   The regularization parameter which determines the 
+%               importance of having a sparse source distribution vs. 
+%               source distribution that explains the receptor 
+%               observations.  The default value is 0, which adds no
+%               penalty to complex source distributions.
+%
+%   factr     The exit criteria for small changes to the objective 
+%               function.  The default value is factr = 0, which 
+%               practically disables this minimization exit test.  
+%               More details on this parameter is given in section 3
+%               of:
+% 
+%               Zhu, Ciyou; Byrd, Richard H.; Lu, Peihuang and 
+%               Nocedal, Jorge., (1997) "Algorithm 778: L-BFGS-B: 
+%               Fortran subroutines for large-scale bound-constrained 
+%               optimization", ACM Transactions on Mathematical 
+%               Software 23(4), 550-560.
+%               
+% 
+%   pgtol     The exit criteria for small changes to the gradient.  
+%               The default value is pgtol = 0, which practically
+%               disables this minimization exit test.  More details on 
+%               this parameter is given in section 3 of:
+% 
+%               Zhu, Ciyou; Byrd, Richard H.; Lu, Peihuang and 
+%               Nocedal, Jorge., (1997) "Algorithm 778: L-BFGS-B: 
+%               Fortran subroutines for large-scale bound-constrained 
+%               optimization", ACM Transactions on Mathematical 
+%               Software 23(4), 550-560.
+%
+%   m         The number of histories to use to approximate the 
+%               Hessian matrix.  The default value is m = 5.
+%
+%  iprint     An integer variable that controls the frequency and type
+%               of output generated:
+%               
+%               iprint<0    no output is generated;
+%               iprint=0    print only one line at the last iteration;
+%               0<iprint<99 print also f and |proj g| every iprint 
+%                             iterations;
+%               iprint=99   print details of every iteration except 
+%                             n-vectors;
+%               iprint=100  print also the changes of active set and 
+%                             final x;
+%               iprint>100  print details of every iteration including
+%                             x and g;
+%               
+%               When iprint > 0, the file iterate.dat will be created 
+%               to summarize the iteration.
+%---------------------------------------------------------------------
+
 
 % set default simulation control parameters
-simDir = '';
+simDir  = '';
 operDir = '';
-noise = 0;
+noise   = 0;
 maxIter = 200;  % The default for lbfgs_options.m is actually 100
 reg_par = 0;
-pgtol = 1E-5;   % default from lbfgs_options.m
-factr = 1E7;    % default from lbfgs_options.m
-m = 5;      % default from lbfgs_options.m
-iprint = 0;     % default from lbfgs_options.m
+pgtol   = 0;      % The default from lbfgs_options.m is actually 1E-5
+factr   = 0;      % The default from lbfgs_options.m is actually 1E7
+m       = 5;          % default from lbfgs_options.m
+iprint  = 0;     % default from lbfgs_options.m
 
 % open file control file and read the simulation control parameters
 fid = fopen(filePath,'r');
@@ -61,7 +116,7 @@ while ~feof(fid)
             assert(tMax>0);
         case 'noise'
             noise = fscanf(fid, '%e', 1);
-            %assert(noise>=0);
+            assert(noise>=0 || noise == -1);
         case 'maxIter'
             maxIter = fscanf(fid,'%d',1);
             assert( maxIter > 0 );
@@ -87,9 +142,10 @@ while ~feof(fid)
 end
 fclose(fid);
 
+% ensure that the parameters contain valid values
 assert( exist( simDir, 'dir') == 7 );
 assert( exist(operDir, 'dir') == 7 );
-%assert(   noise >= 0 );
+assert(   noise >= 0 || noise == -1);
 assert( maxIter >  0 );
 assert(    tMax >  0 );
 assert( reg_par >= 0 );
