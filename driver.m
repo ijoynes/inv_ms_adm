@@ -162,7 +162,7 @@ clear Bv Be row col index i j k
 % the nodes of the element which contains the receptor.  The weights 
 % would be the values of the finite element shape functions at the 
 % location of the receptor. 
-sensorIndex = placeSensors(xy, receptor_xy);
+H = compute_observation_matrix(xy, receptor_xy);
 
 % Determine discrete representation of the emission source
 % Again, this function moves the sources to the nodest mesh nodes.
