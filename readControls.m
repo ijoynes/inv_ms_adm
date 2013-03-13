@@ -1,5 +1,6 @@
-function [simDir, operDir, tMax, noise, maxIter, reg_par, factr, ... 
-    pgtol, m, iprint] = readControls(filePath)
+function [simDir, operDir, domainPath, paramPath, sensorPath, ... 
+  sourcePath, passPath, tMax, dt, noise, maxIter, reg_par, factr, ...
+  pgtol, m, iprint] = readControls(filePath)
 %readControls reads an ASCII text file containing the values of the 
 % parameters that control the execution of the Inverse Mirco-Scale
 % Atmospheric Dispersion Model.
@@ -25,6 +26,12 @@ function [simDir, operDir, tMax, noise, maxIter, reg_par, factr, ...
 %               matrices).  If no value is supplied by the control  
 %               file, then the default value of an empty string is
 %               used.
+%
+%   tMax      The final time of the simulation in seconds.  The 
+%               default value is tMax = 900.
+%
+%   dt        The time step size in seconds.  The default value is 
+%               dt = 1.
 %
 %   noise     The slope of the line which relates the observation 
 %               concentration to the standard deviation of the 
@@ -92,6 +99,11 @@ function [simDir, operDir, tMax, noise, maxIter, reg_par, factr, ...
 % set default simulation control parameters
 simDir  = '';
 operDir = '';
+domainName = 'Domain.mat';
+sensorName = 'Sensors.mat';
+sourceName = 'Source.mat';
+tMax    = 900;
+dt      = 1;
 noise   = 0;
 maxIter = 200;  % The default for lbfgs_options.m is actually 100
 reg_par = 0;
@@ -111,9 +123,18 @@ while ~feof(fid)
             simDir = fscanf(fid,'%s',1);
         case 'operDir'
             operDir = fscanf(fid, '%s', 1);
+        case 'domainName'
+            domainName = fscanf(fid, '%s', 1);
+        case 'sensorName'
+            sensorName = fscanf(fid, '%s', 1);
+        case 'sourceName'
+            sourceName = fscanf(fid, '%s', 1);
         case 'tMax'
             tMax = fscanf(fid, '%d',1);
             assert(tMax>0);
+        case 'dt'
+            dt = fscanf(fid, '%d',1);
+            assert(dt>0);
         case 'noise'
             noise = fscanf(fid, '%e', 1);
             assert(noise>=0 || noise == -1);
@@ -142,12 +163,19 @@ while ~feof(fid)
 end
 fclose(fid);
 
+domainPath = fullfile(simDir, domainName);
+paramPath  = fullfile(simDir,'Parameters.mat');
+sensorPath = fullfile(simDir, sensorName);
+sourcePath = fullfile(simDir, sourceName);
+passPath   = fullfile(simDir,'pass.mat');
+
 % ensure that the parameters contain valid values
 assert( exist( simDir, 'dir') == 7 );
 assert( exist(operDir, 'dir') == 7 );
 assert(   noise >= 0 || noise == -1);
 assert( maxIter >  0 );
 assert(    tMax >  0 );
+assert(      dt >  0 );
 assert( reg_par >= 0 );
 assert(   factr >= 0 );
 assert(   pgtol >= 0 );

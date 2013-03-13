@@ -60,8 +60,9 @@ function exitflag = driver(controlsFilePath)
 % objective function may call).  Critical variables which are 
 % determined before the objective function is called are declared as 
 % global variables.
-global simDir operDir tMax noise reg_par signal_o signal_c ...
-        spaceIntWeight m_star
+global simDir operDir domainPath paramPath sensorPath sourcePath ...
+        passPath tMax noise reg_par signal_o signal_c ...
+        spaceIntWeight m_star nPass B_inv
 
 % Write the simulation start date and time to the log file.
 fprintf('%s\n', datestr(now) );
@@ -71,15 +72,16 @@ fileattrib(controlsFilePath,'-w');
 
 % Read the run parameters from the  control file and write their 
 % values to the log file.
-[simDir,operDir,tMax, noise,maxIter, ...
-reg_par, factr,pgtol,m,iprint] = readControls(controlsFilePath)
+[simDir, operDir, domainPath, paramPath, sensorPath, sourcePath, ... 
+  passPath, tMax, dt, noise,maxIter, reg_par ...
+  factr, pgtol, m, iprint] = readControls(controlsFilePath)
 
 % Declare the file paths the critical simulation files
-domainPath = fullfile(simDir,'Domain.mat');
-paramPath = fullfile(simDir,'Parameters.mat');
-sensorPath = fullfile(simDir,'Sensors.mat');
-sourcePath = fullfile(simDir,'Source.mat');
-passPath = fullfile(simDir,'pass.mat');
+%domainPath = fullfile(simDir,'Domain.mat');
+%paramPath = fullfile(simDir,'Parameters.mat');
+%sensorPath = fullfile(simDir,'Sensors.mat');
+%sourcePath = fullfile(simDir,'Source.mat');
+%passPath = fullfile(simDir,'pass.mat');
 
 % Save these file paths for later reference
 save(fullfile(simDir,'dirSettings.mat'), 'domainPath','paramPath', ...
@@ -127,6 +129,32 @@ for i = 1 : nTris
 end
 spaceIntWeight = spaceIntWeight/6;
 %---------------------------------------------------------------------
+% Construct the inverse of the covariance matrix of the estimated 
+% background error.  This matrix will numerically integrate the square
+% of the residual between the discrete representation of the candidate 
+% source distribution (s_k) and the discrete representation of the 
+% assumed prior source distribution (s_b), such that this relationship
+% is true.
+%
+% int((s_k-s_b)^2, Omega) = (s_k-s_b)'*B^-1*(s_k-s_b)
+Bv = nan(nTris*3*3,1);
+row = nan(nTris*3*3,1);
+col = nan(nTris*3*3,1);
+index = 0;
+for i = 1 : nTris
+    Be = [ 2 1 1; 1 2 1; 1 1 2] * det([ones(3,1), xy(tri(i,:),:)]);
+    for j = 1 : 3
+        for k = 1 : 3
+            index = index + 1;
+            Bv(index) = Be(j,k);
+            row(index) = tri(i,j);
+            col(index) = tri(i,k);
+        end
+    end
+end
+Bv = Bv/24;
+B_inv = sparse(row,col,Bv,nNodes,nNodes);
+clear Bv Be row col index i j k
 
 % Move sensors to the closest mesh nodes
 % This step could be ignored if an observation matrix H was 
@@ -155,7 +183,6 @@ save(sensorPath, 'sensorIndex', '-append')
 xy = xy - ones(nNodes,1)*min(xy);
 
 % Create the time step vector
-dt = 1;
 t = (0:dt:tMax)';
 nt = length(t);
 
@@ -209,7 +236,6 @@ save(fullfile(simDir,'Source','Source_Correct.mat'), ...
 save(paramPath,'t', 'c_0', 'boundary', 'sensorIndex','nNodes', 'nt','tri','xy','E')
 % This should also be a global variable
 nPass = 0;
-save(passPath,'nPass');
 
 % Set the parameters for the operation of the L-BFGS-B routines
 fn = @objective;          % objective function handle
