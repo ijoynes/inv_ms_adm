@@ -1,4 +1,14 @@
-function dJ_dE = CostFncGrad2(t, nNodes)
+function df_dx = solve_adjoint_advection_diffusion_equation(c_k, t, H, working_dir, oper_dir, theta, c_0)
+
+
+
+
+
+
+
+
+
+%function dJ_dE = CostFncGrad2(t, nNodes)
 
 global simDir operDir tMax signal_o signal_c
 

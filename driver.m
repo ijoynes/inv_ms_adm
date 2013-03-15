@@ -238,7 +238,7 @@ save(paramPath,'t', 'c_0', 'boundary', 'sensorIndex','nNodes', 'nt','tri','xy','
 nPass = 0;
 
 % Set the parameters for the operation of the L-BFGS-B routines
-fn = @objective;          % objective function handle
+fn = @objective_function; % objective function handle
 
 x0 = E_0;                 % initial parameter estimate
                           %   In this case the source parameters 
