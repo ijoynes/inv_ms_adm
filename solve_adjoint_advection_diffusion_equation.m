@@ -1,11 +1,48 @@
-function df_dx = solve_adjoint_advection_diffusion_equation(c_k, c_star, t, H, working_dir, oper_dir, theta, c_0)
+function df_dx = solve_adjoint_advection_diffusion_equation(c_k, c_star, t, H, save_flag, working_dir, oper_dir, theta, c_0)
 %solve_adjoint_advection_diffusion_equation computes the gradient of 
 % the observational component of objective function with respect to
 % the volumetric source emission rate parameters x with the discrete 
 % adjoint method.
 
+
+%-----------------------------------------------------------------------
+% ########################## VARIABLE NOTES ########################## |
+%-----------------------------------------------------------------------
+% adj_label   string for the file label of the saved discrete adjoint  |
+%               variable states                                        |
+% adj_path    string for the file path to save a .mat file containing  |
+%               the values of the discrete adjoint variable            |
+% C           sparse finite element capacitance matrix saved in the    |
+%               operator file                                          |
+% Cn          sparse finite element capacitance matrix for the nth     |
+%                time step                                             |
+% dt          time step size                                           |
+% file_num    string of digits containing a file number                |
+% grad_label  string for the file label of the saved objective         |
+%               function gradient states                               |
+% grad_path   string for the file path to save a .mat file containing  |
+%               the current state of the objective function gradient   |
+% K           sparse finite element stiffness matrix saved in the      |
+%               operator file                                          |
+% Kn          sparse finite element stiffness matrix for the nth time  |
+%               step                                                   |
+% n           time step index                                          |
+% nt          number of time steps                                     |
+% nNodes      number nodes in the discretized domain                   |
+% nx          number of volumetric source emission rate parameters     |
+% oper_label  string for the file label of the precomputed finite      |
+%               element operators                                      |
+% oper_path   string for the file path to load a .mat file containing  |
+%               finite element operators                               |
+% temp        intermediate result from the computation of the adjoint  |
+%               variable at a previous time step (backwards marching   |
+%               in time)                                               |
+% y           discrete adjoint variable (was chosen for its similarity |
+%               to an upside down lower case lambda)                   |
+%-----------------------------------------------------------------------
+
 % Ensure the require number of arguments are supplied.
-assert( 6 <= nargin && nargin <= 8 ); 
+assert( 7 <= nargin && nargin <= 9 ); 
 
 % Check c_k
 assert( isvector(c_k) );                % ensure s is a vector
@@ -31,16 +68,23 @@ assert( isnumeric(H) );           % ensure H is a numeric array
 assert( size(H, 1) == size(c_k, 2) );  % ensure dimensions of H and c_k agree
 assert( size(H, 1) == size(c_star, 2) );  % ensure dimensions of H and c_star agree
 
+% Check save_flag
+assert( islogical(save_flag) );
+assert( isscalar(save_flag) );
+
 % Check working_dir
-assert( ischar(working_dir) );  % ensure working_dir is a string
-assert( exist( working_dir, 'dir') == 7 );
+%   if save_flag is false then working_dir can contain any value.
+if save_flag
+  assert( ischar(working_dir) );  % ensure working_dir is a string
+  assert( exist( working_dir, 'dir') == 7 );
+end
 
 % Check operator_dir
 assert( ischar(operator_dir) ); % ensure operator_dir is a string
 assert( exist( operator_dir, 'dir') == 7 );
 
 % If theta is supplied make sure it contains valid data.
-if nargin >= 7                        % if theta is supplied
+if nargin >= 8                        % if theta is supplied
   assert( isscalar(theta) );          % ensure theta is a scalar
   assert( isnumeric(theta) );         % ensure theta is a number
   assert( 0 <= theta && theta <= 1 ); % ensure 0  <= theta <= 1
@@ -51,7 +95,7 @@ end
 % If c_0 is supplied make sure it contains valid data.  If c_0 is not 
 % supplied then the initial condition is assumed to be the steady 
 % state concentration distribution for the initial flow conditions.
-if nargin == 8              % if c_0 is supplied
+if nargin == 9              % if c_0 is supplied
   assert( isnumeric(c_0) ); % ensure c_0 is numeric array
   assert( isvector(c_0) );  % ensure c_0 is a vector(or scalar 1-by-1)
   if isscalar(c_0)          % constant initial condition
@@ -63,21 +107,34 @@ if nargin == 8              % if c_0 is supplied
     assert( length(c_0) == size(H,2));  % ensure dimensions of H and 
   end                                   %   c_0 agree
 end
-%---------------------------------------------------------------------
+
 
 nNodes = size(H, 2);
 nx = nNodes;
+oper_label = 'Operators_';
 
-df_dx = zeros(nx,1);
+if save_flag
+  adj_label = 'Adjoint_';
+  grad_label = 'Gradient_';
+end
+
+df_dx = zeros(nx, 1);
 y = H'*(c_k(nt,:)-c_star(nt,:))';
 
+% Save the current state of the discretized adjoint field if it is desired.
+%   Make sure that the final value of the adjoint field is supposed to be the receptor residual error and not zero instead!
+if save_flag
+  file_num = generate_file_num(n-1, nt);
+  adjoint_path = fullfile(working_dir [adj_label file_num '.mat']);
+  save(adjoint_path,'y');
+end
 
 uPath = fullfile(simDir,'U.mat');
 load(uPath);
 
 % load operators for the last time step
-operatorPath = fullfile(operDir, ['Operators_' num2str(nt-1) '.mat']);
-load(operatorPath,'C','K');
+oper_path = fullfile(oper_dir, [oper_label num2str(nt-1) '.mat']);
+load(oper_path,'C','K');
 
 % copy operators so that they can still be accessed in the next time step.
 Cn = C;
@@ -86,23 +143,29 @@ Kn = K;
 % compute the backwards in time evolution of the adjoint variable and its contribution to the gradient of the objective function.
 for n = nt-1 :-1: 1
 
-  operatorPath = fullfile(operDir, ['Operators_' num2str(n-1) '.mat']);
+  operatorPath = fullfile(oper_dir, [oper_label num2str(n-1) '.mat']);
   load(operatorPath,'C','K');
 
   dt = t(n+1) - t(n);
 
   temp = Cn'*(U'*((U*(Cn'/dt+theta*Kn')*U')\(U*y)));
   df_dx = df_dx + temp;
-  if nPass == 0
-    gradPath = fullfile(simDir, 'Gradient', ['Gradient_' num2str(n) '.mat']);
-    save(gradPath,'df_dx');
+  
+  % Save the current state of the objective function gradient if it is desired.
+  if save_flag
+    file_num = generate_file_num(n, nt);
+    grad_path = fullfile(working_dir, [grad_label file_num '.mat']);
+    save(grad_path,'df_dx');
   end
 
   y = temp/dt -(1-theta)*K'*(C'\temp);
   y = y + H'*(c_k(n,:) - c_star(n,:))';
-  if nPass == 0
-    adjointPath = fullfile(simDir,'Adjoint', ['Adjoint_' num2str(n-1) '.mat']);
-    save(adjointPath,'y');
+
+  % Save the current state of the discretized adjoint field if it is desired.
+  if save_flag
+    file_num = generate_file_num(n-1, nt);
+    adjoint_path = fullfile(working_dir [adj_label file_num '.mat']);
+    save(adjoint_path,'y');
   end
 
   % copy operators so that they can still be accessed in the next time step.
@@ -115,14 +178,16 @@ end
 % the initial conditions of the tracer concentration field are dependent on the
 % volumetric source emission rate then compute the contribution of the initial conditions 
 % to the objective function gradient.
-if nargin < 8
+if nargin < 9
   temp = Cn'*U'*((U*Kn'*U')\(U*y));
   df_dx = df_dx + temp;
 end
 
-if nPass == 0
-  gradPath = fullfile(simDir, 'Gradient', 'Gradient_0.mat');
-  save(gradPath,'df_dx');
+% Save the current state of the objective function gradient if it is desired.
+if save_flag
+  file_num = generate_file_num(0,nt);
+  grad_path = fullfile(working_dir, [grad_label file_num '.mat']);
+  save(grad_path,'df_dx');
 end
 
 %###################################################################################################################

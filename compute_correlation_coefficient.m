@@ -1,21 +1,24 @@
-function r = compute_correlation_coefficient(c_k, c_star)
-% consider changing the variable names to a more general format, 
-% (i.e. f for the model and y for the observations).
+function r = compute_correlation_coefficient(x, y)
+% x   model response
+% y   observations
 
-assert( isnumeric(c_k) );
-assert( isnumeric(c_star) );
-assert( size(c_k,1) == size(c_star,1));
-assert( size(c_k,2) == size(c_star,2));
+assert( isnumeric(x) );
+assert( isnumeric(y) );
+assert( all(size(x) == size(y)) );
 
-Sy = sum(sum(c_k));
+x  = reshape(x, 1, [])';
+y  = reshape(y, 1, [])';
 
-if Sy == 0
-  r = 0;
+Sx  = sum(x);
+Sy  = sum(y);
+Sxx = sum(x.^2);
+Syy = sum(y.^2);
+Sxy = sum(x.*y);
+n   = numel(y);
+den = sqrt(n*Sxx-Sx^2)*sqrt(n*Syy-Sy^2);
+
+if den == 0 % if the denominator is zero then the correlation 
+  r = 0;    %   coefficient is assumed to be 0
 else
-  Sx  = sum(sum(c_star));
-  Sxx = sum(sum(c_star.^2));
-  Syy = sum(sum(c_k.^2));
-  Sxy = sum(sum(c_star.*c_k));
-  n = numel(c_star);
-  r = (n*Sxy-Sx*Sy)/(sqrt(n*Sxx-Sx^2)*sqrt(n*Syy-Sy^2));
+  r = (n*Sxy-Sx*Sy)/den;
 end
