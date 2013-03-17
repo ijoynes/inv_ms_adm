@@ -58,6 +58,14 @@ function H = compute_observation_matrix(T, X, x)
 % coordinates and receptor coordinates match.
 assert(size(X, 2) == size(x, 2));
 
+% Consider testing T for integers
+
+assert(isnumeric(T));
+assert(isnumeric(X));
+assert(isnumeric(x));
+assert(size(X,2) == size(x,2));
+assert(size(T,2) == size(X,2)+1); % ensure T represents simplexes
+
 % Predetermine constants        % Matrix sizes from description
 nReceptors = size(x, 1);        % R
 nNodes     = size(X, 1);        % P
