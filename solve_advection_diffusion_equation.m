@@ -99,9 +99,9 @@ function r_obs = solve_advection_diffusion_equation( s, t, H, ...
 %   r_obs = solve_advection_diffusion_equation( s, t, H, ...
 %                working_dir, operator_dir, 0.5, c_0 );
 
-%---------------------------------------------------------------------
-% CHECK FOR VALID INPUT
-%---------------------------------------------------------------------
+%-----------------------------------------------------------------------
+% CHECK FOR VALID INPUT                                                |
+%-----------------------------------------------------------------------
 % Ensure the require number of arguments are supplied.
 assert( 5 <= nargin && nargin <= 7 ); 
 
@@ -125,7 +125,7 @@ end
 % Check H
 assert( issparse(H) );            % ensure H is a sparse matrix
 assert( isnumeric(H) );           % ensure H is a numeric array
-assert( size(H,2) = size(s,1) );  % ensure dimensions of H and s agree
+assert( size(H,2) == size(s,1) ); % ensure dimensions of H and s agree
 
 % Check working_dir
 assert( ischar(working_dir) );  % ensure working_dir is a string
