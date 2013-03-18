@@ -124,7 +124,7 @@ y = H'*(c_k(nt,:)-c_star(nt,:))';
 % Save the current state of the discretized adjoint field if it is desired.
 %   Make sure that the final value of the adjoint field is supposed to be the receptor residual error and not zero instead!
 if save_flag
-  file_num = generate_file_num(n-1, nt);
+  file_num = generate_file_num(nt-1, nt);
   adjoint_path = fullfile(working_dir [adj_label file_num '.mat']);
   save(adjoint_path,'y');
 end
@@ -133,6 +133,7 @@ uPath = fullfile(simDir,'U.mat');
 load(uPath);
 
 % load operators for the last time step
+file_num = generate_file_num(nt-1, nt);
 oper_path = fullfile(oper_dir, [oper_label num2str(nt-1) '.mat']);
 load(oper_path,'C','K');
 
@@ -142,8 +143,8 @@ Kn = K;
 
 % compute the backwards in time evolution of the adjoint variable and its contribution to the gradient of the objective function.
 for n = nt-1 :-1: 1
-
-  operatorPath = fullfile(oper_dir, [oper_label num2str(n-1) '.mat']);
+  file_num = generate_file_num(n-1,nt);
+  operatorPath = fullfile(oper_dir, [oper_label file_num '.mat']);
   load(operatorPath,'C','K');
 
   dt = t(n+1) - t(n);
@@ -179,7 +180,7 @@ end
 % volumetric source emission rate then compute the contribution of the initial conditions 
 % to the objective function gradient.
 if nargin < 9
-  temp = Cn'*U'*((U*Kn'*U')\(U*y));
+  temp = Cn'*(U'*((U*Kn'*U')\(U*y)));
   df_dx = df_dx + temp;
 end
 
@@ -196,76 +197,60 @@ end
 
 %function dJ_dE = CostFncGrad2(t, nNodes)
 
-global simDir operDir tMax signal_o signal_c
+%global simDir operDir tMax signal_o signal_c
 
-load(fullfile(simDir,'dirSettings.mat'));
-load(passPath);
-nt = length(t);
-theta = 0.5;
+%load(fullfile(simDir,'dirSettings.mat'));
+%load(passPath);
+%nt = length(t);
+%theta = 0.5;
 
-   %%% observationPath = fullfile(simDir,'Observation',['Observation_' num2str(nt-1) '.mat']);
-   %%% concentrationPath = fullfile(simDir,'Concentration',['Concentration_' num2str(nt-1) '.mat']);
-   %%% noisePath = fullfile(simDir,'Noise',['Noise_' num2str(nt-1) '.mat']);
-   %%% load(observationPath)
-   %%% load(concentrationPath)
-   %%% load(noisePath)
-   load(sensorPath)
-y = zeros(nNodes,1);   
-%%% y(sensorIndex) = c(sensorIndex)-(o(sensorIndex)+o_error(sensorIndex));
-y(sensorIndex) = signal_c(nt,:)-signal_o(nt,:);
-if nPass == 0
-adjointPath = fullfile(simDir,'Adjoint', ['Adjoint_' num2str(nt-1) '.mat']);
-save(adjointPath,'y');
-end
-dJ_dE = zeros(nNodes,1);
 
-uPath = fullfile(simDir,'U.mat');
-load(uPath);
-operatorPath = fullfile(operDir, ['Operators_' num2str(nt-1) '.mat']);
-   load(operatorPath,'C','K');
-   Cn = C;
-   Kn = K;
-for n = nt-1 :-1: 1   
+%   load(sensorPath)
+%y = zeros(nNodes,1);   
+%y(sensorIndex) = signal_c(nt,:)-signal_o(nt,:);
+%if nPass == 0
+%adjointPath = fullfile(simDir,'Adjoint', ['Adjoint_' num2str(nt-1) '.mat']);
+%save(adjointPath,'y');
+%end
+%dJ_dE = zeros(nNodes,1);
+
+%uPath = fullfile(simDir,'U.mat');
+%load(uPath);
+%operatorPath = fullfile(operDir, ['Operators_' num2str(nt-1) '.mat']);
+%   load(operatorPath,'C','K');
+%   Cn = C;
+%   Kn = K;
+%for n = nt-1 :-1: 1   
    
-	%fprintf('%s %d\n','y @ t =', n);
-   	operatorPath = fullfile(operDir, ['Operators_' num2str(n-1) '.mat']);
-   	load(operatorPath,'C','K');
+%   	operatorPath = fullfile(operDir, ['Operators_' num2str(n-1) '.mat']);
+%   	load(operatorPath,'C','K');
 
+%   
+%   dt = t(n+1) - t(n);
+
+%   temp = Cn'*(U'*((U*(Cn'/dt+theta*Kn')*U')\(U*y)));
    
-   dt = t(n+1) - t(n);
+%   dJ_dE = dJ_dE + temp;
+%if nPass == 0
+% gradPath = fullfile(simDir, 'Gradient', ['Gradient_' num2str(n) '.mat']);
+%save(gradPath,'dJ_dE');
+%end  
 
-   temp = Cn'*(U'*((U*(Cn'/dt+theta*Kn')*U')\(U*y)));
-   
-   dJ_dE = dJ_dE + temp;
-if nPass == 0
- gradPath = fullfile(simDir, 'Gradient', ['Gradient_' num2str(n) '.mat']);
-save(gradPath,'dJ_dE');
-end  
-   %if n > 1
-		   
-   %%% observationPath = fullfile(simDir,'Observation',['Observation_' num2str(n-1) '.mat']);
-   %%% concentrationPath = fullfile(simDir,'Concentration',['Concentration_' num2str(n-1) '.mat']);
-   %%% noisePath = fullfile(simDir,'Noise',['Noise_' num2str(nt-1) '.mat']);
+%   y = temp/dt -(1-theta)*K'*(C'\temp);
+%   y(sensorIndex) = y(sensorIndex) + (signal_c(n,:) - signal_o(n,:))';
+%   if nPass == 0
+%adjointPath = fullfile(simDir,'Adjoint', ['Adjoint_' num2str(n-1) '.mat']);
+%save(adjointPath,'y');
+%end
+%   Cn = C;
+%   Kn = K;
 
-   %%% load(observationPath)
-   %%% load(concentrationPath)
-   %%% load(noisePath)
-   y = temp/dt -(1-theta)*K'*(C'\temp);
-   %%% y(sensorIndex) = y(sensorIndex) +c(sensorIndex)-(o(sensorIndex)+o_error(sensorIndex));
-   y(sensorIndex) = y(sensorIndex) + (signal_c(n,:) - signal_o(n,:))';
-   if nPass == 0
-adjointPath = fullfile(simDir,'Adjoint', ['Adjoint_' num2str(n-1) '.mat']);
-save(adjointPath,'y');
-end
-   Cn = C;
-   Kn = K;
-   %end
 
-end
+%end
 
-temp = Cn'*U'*((U*Kn'*U')\(U*y));
-dJ_dE = dJ_dE + temp;
-if nPass == 0
-gradPath = fullfile(simDir, 'Gradient', 'Gradient_0.mat');
-save(gradPath,'dJ_dE');
-end
+%temp = Cn'*U'*((U*Kn'*U')\(U*y));
+%dJ_dE = dJ_dE + temp;
+%if nPass == 0
+%gradPath = fullfile(simDir, 'Gradient', 'Gradient_0.mat');
+%save(gradPath,'dJ_dE');
+%end

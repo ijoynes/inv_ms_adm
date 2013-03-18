@@ -5,17 +5,17 @@ function [f,df]=objective_function(x_k)
 %       spaceIntWeight m_star nPass c_star B_inv
 
 
-global sim_dir oper_dir iter_dir t reg_par c_star B_inv H
+global sim_dir oper_dir iter_dir t reg_par c_star B_inv H noise
 
 assert(nargout == 2);
 
 nt = length(t);
 
-
-
 s_k = volumetric_emission_rate(x_k);
 
 c_k = solve_advection_diffusion_equation(s_k, t, H, false, conc_dir, oper_dir);
+c_k = add_obs_noise(c_k, noise);
+
 f_obs = 0.5*sum(sum((c_k-c_star).^2));  % f_obs = 0.5*(Hc(x)-c*)'R^-1(Hc(x)-c*), R^-1 is assumed to be the identity matrix
 
 
