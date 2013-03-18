@@ -56,6 +56,7 @@ function H = compute_observation_matrix(T, X, x)
 
 % Ensure that the number of spatial dimensions of the mesh nodes 
 % coordinates and receptor coordinates match.
+assert(nargin == 3)
 assert(size(X, 2) == size(x, 2));
 
 % Consider testing T for integers

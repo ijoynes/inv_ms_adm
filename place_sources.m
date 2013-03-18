@@ -3,8 +3,12 @@ function s = place_sources(tri, xy, Sxy, Sm)
     nTris  = size(tri,1);
     nSources = size(Sxy,1);
     
-    sourceIndex = placeSensors(xy,Sxy);
+    sourceIndex = zeros(nSources,1);
+    for i = 1 : nSources
+        [v,sourceIndex(i)]=min(sum((xy - ones(nNodes,1)*Sxy(i,:)).^2,2));
+    end
     
+
     s = zeros(nNodes,1);
     for i = 1 : nSources
         s_temp = zeros(nNodes,1);

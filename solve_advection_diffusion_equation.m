@@ -158,7 +158,7 @@ nNodes = length(s);                   % number of nodes in the mesh
 % Check t
 assert( isvector(t), 'ERROR: arg #2 was expecting a numeric vector' );            % ensure t is a vector
 assert( isnumeric(t), 'ERROR: arg #2 was expecting a numeric vector' );           % ensure t is numeric array
-assert( t(1) = 0, 'ERROR: first element of arg #2 was expected to be 0' );        % ensure t starts at 0
+assert( t(1) == 0, 'ERROR: first element of arg #2 was expected to be 0' );        % ensure t starts at 0
 nt = length(t);
 for n = 2 : nt                    % ensure t contains sequential time 
   assert( t(n-1) < t(n), 'ERROR: arg #2 does not contain sequentially increasing values' );        %   steps
@@ -193,7 +193,7 @@ if nargin >= 7                        % if theta is supplied
   assert( isnumeric(theta) );         % ensure theta is a number
   assert( 0 <= theta && theta <= 1 ); % ensure 0  <= theta <= 1
 else
-  theta = 0.5 % default value (Crank-Nicholson method)
+  theta = 0.5; % default value (Crank-Nicholson method)
 end
 
 % If c_0 is supplied make sure it contains valid data.  If c_0 is not 
@@ -237,7 +237,7 @@ if nargin < 8
 end
 c = c_0;
 clear c_0   % c_0 is no longer required
-r_obs(:, 1) = (H*c)';   % compute the initial receptor observations
+r_obs(1, :) = (H*c)';   % compute the initial receptor observations
 
 % Save discretized tracer concentration field if it is desired.
 if save_flag
@@ -271,7 +271,7 @@ for n = 1 : nt - 1
                     [conc_label, file_num, '.mat'] );
     save(working_path, 'c');
   end
-  r_obs(:,n+1) = (H*c)';
+  r_obs(n+1,:) = (H*c)';
   Cn = C;
   Kn = K;
 end

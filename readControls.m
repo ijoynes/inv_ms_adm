@@ -178,6 +178,7 @@ sourcePath = fullfile(simDir, sourceName);
 passPath   = fullfile(simDir,'pass.mat');
 
 % ensure that the parameters contain valid values
+operDir
 assert( exist( simDir, 'dir') == 7  );
 assert( exist(operDir, 'dir') == 7  );
 assert(   noise >= 0 || noise == -1 );
