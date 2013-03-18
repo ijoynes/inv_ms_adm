@@ -45,9 +45,6 @@ df = df_obs + p*(B_inv*(s_k-s_b));
 % evaluations while performing a line-search to ensure that the 
 % objective is reduced in the next iteration.
 if nPass == 0
-  file_num = generate_file_num(nPass, nt);
-  results_path = fullfile(iter_dir, [iter_label, file_num, '.mat']);
-
   s = s_k;
   c = c_k;
   x = x_k;
@@ -56,8 +53,10 @@ if nPass == 0
 
   m = dot(spaceIntWeight, E_approx);
   m_norm = m/m_star;
-  fprintf('| %s | %4d | %8.6e |  %8.6e | %9.6e | %8.6e | %8.6e |\n', datestr(now), nPass, f, max(abs(g)),r2,r, m_norm);
+  fprintf('| %s | %4d | %8.6e |  %8.6e | %9.6e | %8.6e | %8.6e |\n', datestr(now), nPass, f, max(abs(df)),r2,r, m_norm);
 
+  file_num = generate_file_num(nPass, nt);
+  results_path = fullfile(iter_dir, [iter_label, file_num, '.mat']);
   save(results_path,'f','f_obs', 'df', 'df_obs', 's', 'x' 'c','r','r2','m','m_norm');
 end
 

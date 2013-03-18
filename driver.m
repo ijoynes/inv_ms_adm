@@ -31,21 +31,21 @@ function exitflag = driver(controlsFilePath)
 %
 % VARIABLES
 %   simDir    Directory path the the simulation results.
-%   operDir   Directory path the stiffness and capacitance matricies.
+%   operDir   Directory path the stiffness and capacitance matrices.
 %   tMax      The max time of the simulation.
 %   noise     The slope of the line which relates the observation 
 %               concentration to the standard deviation of the 
-%               gaussian distributed noise (0.1 = 10% noise).
+%               Gaussian distributed noise (0.1 = 10% noise).
 %   maxIter   Maximum number of iterations.
 %   reg_par   Regularization parameter (reg_par >= 0).
 %   signal_o  Matrix representing the synthetic receptor observations
 %               each row represents a sample time, and each column 
-%               represents an idividual receptor.  Measurements are 
+%               represents an individual receptor.  Measurements are 
 %               reported in the units kg/m^3.
 %   signal_c  Matrix representing the receptor observations for a 
 %               candidate volumetric source profile each row 
 %               represents a sample time, and each column represents 
-%               an idividual receptor.  Measurements are reported in 
+%               an individual receptor.  Measurements are reported in 
 %                the units kg/m^3.
 %   spaceIntWeight  A weight matrix for the regularization term of the 
 %                     objective function.  This weight matrix 
@@ -111,22 +111,22 @@ load(domainPath);
 load(sensorPath);
 load(sourcePath);
 
-%---------------------------------------------------------------------
-% The integration of a scalar over the entire domain can be 
-% approximated numerically by summing the integral of the scalar over
-% each element.  The integral of the scalar over an element can be 
-% approximated summing the integrals of the product of finite element 
-% shape functions and the nodal value of the scalar feild.  This 
-% integration operation can be streamlined by precommuting a spatial 
-% integration weight vector (spaceIntWeight in this case), which is a
-% vector of weights based on the area (or volume) of elements that a 
-% given mesh node shares, and indicates the influence that a given 
-% node has on the spatial integration of the scalar field.  With this 
-% precomputed spatial integration weight vector the spatial 
-% integration of any scalar feild (represented as a vector of nodal 
-% values) is computed with the dot product between these to vectors.
-% For instance the total emission rate of a source volumetric emission 
-% rates would be computed as follows:
+%-----------------------------------------------------------------------
+% The integration of a scalar over the entire domain can be approximated
+% numerically by summing the integral of the scalar over each element.
+% The integral of the scalar over an element can be approximated summing
+% the integrals of the product of finite element shape functions and the
+% nodal value of the scalar field.  This integration operation can be
+% streamlined by pre-computing a spatial integration weight vector
+% (spaceIntWeight in this case), which is a vector of weights based on
+% the area (or volume) of elements that a given mesh node shares, and 
+% indicates the influence that a given node has on the spatial 
+% integration of the scalar field.  With this precomputed spatial 
+% integration weight vector the spatial integration of any scalar field
+% (represented as a vector of nodal values) is computed with the dot 
+% product between these to vectors.  For instance the total emission 
+% rate of a source volumetric emission rates would be computed as 
+% follows:
 %
 % total_emission_rate = dot(spaceIntWeight, s);
 %
@@ -137,7 +137,7 @@ for i = 1 : nTris
                              det([ones(3,1) xy(tri(i,:),:) ] );
 end
 spaceIntWeight = spaceIntWeight/6;
-%---------------------------------------------------------------------
+%-----------------------------------------------------------------------
 % Construct the inverse of the covariance matrix of the estimated 
 % background error.  This matrix will numerically integrate the square
 % of the residual between the discrete representation of the candidate 
@@ -166,28 +166,27 @@ B_inv = sparse(row,col,Bv,nNodes,nNodes);
 clear Bv Be row col index i j k
 
 % Move sensors to the closest mesh nodes
-% This step could be ignored if an observation matrix H was 
-% constructed to perform a weighted average of the concentration at 
-% the nodes of the element which contains the receptor.  The weights 
-% would be the values of the finite element shape functions at the 
-% location of the receptor. 
+% This step could be ignored if an observation matrix H was constructed
+% to perform a weighted average of the concentration at the nodes of the
+% element which contains the receptor.  The weights would be the values
+% of the finite element shape functions at the location of the receptor.
 H = compute_observation_matrix(xy, receptor_xy);
 
-% Determine discrete representation of the emission source
-% Again, this function moves the sources to the nodest mesh nodes.
-% The volumetric emission rate of each source is scaled by the inverse
-% of the size of the element such that a custer of large or small 
-% elements would have the same total emission rate.
+% Determine discrete representation of the emission source.  Again, this
+% function moves the sources to the nearest mesh nodes.  The volumetric
+% emission rate of each source is scaled by the inverse of the size of
+% the element such that a cluster of large or small elements would have
+% the same total emission rate.
 E = placeSources(tri, xy, source_xy, source_m);
 
-% Compute the total emission rate in kg/s of the known source by 
-% integrating the volumetric source emission rate over the spatial 
-% domain.  This integration is approximated numerically with the 
-% spatial integration weight vector.  
+% Compute the total emission rate in kg/s of the known source by
+% integrating the volumetric source emission rate over the spatial
+% domain.  This integration is approximated numerically with the spatial
+% integration weight vector.
 m_star = dot(spaceIntWeight,E);
 save(sensorPath, 'sensorIndex', '-append')
 
-% Reorient the domain such that the lower left corner has the 
+% Reorient the domain such that the lower left corner has the
 % coordinate (0,0)
 xy = xy - ones(nNodes,1)*min(xy);
 
@@ -201,7 +200,7 @@ c_0 = zeros(nNodes,1);
 % --------------------------------------------------------------------
 % If an initial source guess is present in the file path
 %   simDir/Source/Source_0.mat
-% then load that inital guess.  However if no initial guess is present
+% then load that initial guess.  However if no initial guess is present
 % assume an all zero initial guess and save it.
 if exist(fullfile(simDir,'Source','Source_0.mat'))==2
   load(fullfile(simDir,'Source','Source_0.mat'),'s');
@@ -252,11 +251,11 @@ fn = @objective_function; % objective function handle
 x0 = E_0;                 % initial parameter estimate
                           %   In this case the source parameters 
                           %   represent the nodal values of the 
-                          %   volumeteric source emission rate.
+                          %   volumetric source emission rate.
                           
 lb = zeros(nNodes,1);     % lower bound on parameter search space
                           %   Setting this lower bound to zero ensures
-                          %   that unphyiscal negative sources (sinks) 
+                          %   that unphysical negative sources (sinks) 
                           %   are not predicted. This will need to be 
                           %   adjusted in future implementations if 
                           %   the source parameters x represent 
