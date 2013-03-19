@@ -66,12 +66,7 @@ function exitflag = driver(controlsFilePath)
 
 global sim_dir oper_dir iter_dir conc_dir adj_dir iter_label conc_label adj_label grad_label H c_star save_flag
 
-obs_dir = fullfile(sim_dir, 'Observation');
 
-iter_label = 'Source_';
-conc_label = 'Concentration_';
-adj_label  = 'Adjoint_';
-grad_label = 'Gradient_';
 
 
 
@@ -86,6 +81,13 @@ fileattrib(controlsFilePath,'-w');
 [sim_dir, oper_dir, domainPath, paramPath, sensorPath, sourcePath, ... 
   passPath, tMax, dt, noise, maxIter, reg_par ...
   factr, pgtol, m, iprint, save_flag] = readControls(controlsFilePath)
+sim_dir
+obs_dir = fullfile(sim_dir, 'Observation');
+
+iter_label = 'Source_';
+conc_label = 'Concentration_';
+adj_label  = 'Adjoint_';
+grad_label = 'Gradient_';
 
 % Declare the file paths the critical simulation files
 %domainPath = fullfile(simDir,'Domain.mat');
@@ -242,8 +244,7 @@ c_star = add_observation_noise(c_star, noise);
 %end
 
 % Append the synthetic receptor observations to the known source file
-save(fullfile(sim_dir,'Source','Source_Correct.mat'), ...
-  'E','signal_o', 'm_star');
+save(fullfile(iter_dir,[iter_label 'Correct.mat']),'c_star', '-append');
 
 % These should be global variables
 %%%%save(paramPath,'t', 'c_0', 'boundary', 'sensorIndex','nNodes', 'nt','tri','xy','E')
@@ -253,7 +254,7 @@ nPass = 0;
 % Set the parameters for the operation of the L-BFGS-B routines
 fn = @objective_function; % objective function handle
 
-x0 = E_0;                 % initial parameter estimate
+x0 = x;                   % initial parameter estimate
                           %   In this case the source parameters 
                           %   represent the nodal values of the 
                           %   volumetric source emission rate.

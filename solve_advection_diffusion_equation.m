@@ -221,14 +221,16 @@ nReceptors = size(H, 1);
 r_obs = nan(nt, nReceptors);
 
 
+uPath = fullfile(working_dir, '..', 'U.mat');
+load(uPath);
+
 % load the initial operators 
 file_num = generate_file_num(0, nt);
 operator_path = fullfile(operator_dir, [oper_label file_num '.mat']);
 load( operator_path, 'C', 'K' );
-uPath = fullfile(working_dir, '..', 'U.mat');
-load(uPath);
 Cn = C;
 Kn = K;
+
 
 % Compute initial concentration distribution from a steady state
 % solution of the source with in initial flow conditions.

@@ -25,14 +25,14 @@ switch state
     r  = compute_correlation_coefficient(c_k, c_star);
     r2 = compute_coefficient_of_determination(c_k, c_star);
 
-    %m = dot(spaceIntWeight, E_approx);
+    m = dot(spaceIntWeight, E_approx);
     m_norm = m/m_star;
 
     fprintf('| %s | %4d | %8.6e |  %8.6e |  %9.6e | %8.6e | %8.6e |\n', datestr(now), iter.it, iter.f, max(abs(iter.g)),r2,r,m_norm);
     s = x;
     f = iter.f;
     g = iter.g;
-    save(results_path,'f','f_obs', 'df', 'df_obs', 's', 'x' 'c','r','r2','m','m_norm');
+    save(results_path,'f','f_obs', 'df', 'df_obs', 's', 'x', 'c','r','r2','m','m_norm');
 
   case 'done'
     fprintf('------------------------------------------------------------------------------------------------------------\n');
