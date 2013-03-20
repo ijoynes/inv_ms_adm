@@ -1,44 +1,69 @@
-function [stop,user_data] = test_callback(x,iter,state,user_data,opts)
+function [stop,user_data] = callback(x,iter,state,user_data,opts)
 
-global inputDir simDir c_k c_star m m_star
+global_vars
 
 switch state
   case 'init'
     fprintf('------------------------------------------------------------------------------------------------------------\n');
-    fprintf('|       Date/Time      | Iter |      f       |  inf_norm(g)  |      r^2      |      r       |     m/m*     |\n');
+    fprintf('|       Date/Time      | Iter |      f       |    |proj g|   |      r^2      |      r       |     m/m*     |\n');
     fprintf('------------------------------------------------------------------------------------------------------------\n');
 
-    user_data.f = zeros(1,opts.maxits);
-    user_data.x = zeros(length(x),opts.maxits);
-    user_data.its = 0;
+    n = length(x);
+    user_data.f = zeros(1, opts.maxits+1);
+    user_data.g = zeros(n, opts.maxits+1);
+    user_data.g_proj = zeros(n, opts.maxits+1);
+    user_data.x = zeros(n, opts.maxits+1);
+    user_data.its = 1;
     
   case 'iter'
-    user_data.f(iter.it) = iter.f;
-    user_data.x(:,iter.it) = x;
-    user_data.its = user_data.its + 1;
-
-    file_num = generate_file_num(nPass, nt);
-    results_path = fullfile(iter_dir, [iter_label, file_num, '.mat']);
-
-    s = volumetric_emission_rate(x);
-    c = c_k;
-    r  = compute_correlation_coefficient(c_k, c_star);
-    r2 = compute_coefficient_of_determination(c_k, c_star);
-
-    m = dot(spaceIntWeight, E_approx);
-    m_norm = m/m_star;
-
-    fprintf('| %s | %4d | %8.6e |  %8.6e |  %9.6e | %8.6e | %8.6e |\n', datestr(now), iter.it, iter.f, max(abs(iter.g)),r2,r,m_norm);
-    s = x;
     f = iter.f;
     g = iter.g;
-    save(results_path,'f','f_obs', 'df', 'df_obs', 's', 'x', 'c','r','r2','m','m_norm');
+
+    user_data.f(   iter.it + 1) = f;
+    user_data.g(:, iter.it + 1) = g;
+    user_data.x(:, iter.it + 1) = x;
+    user_data.its = user_data.its + 1;
+
+    s = volumetric_emission_rate(x);
+
+    % Compute the projected gradient from boundary clipping.
+    g_proj = projgr(x,g,lb,ub,nbd);
+
+    % The observational component of the objective function and gradient
+    % is computed by subtracting the regularization term.
+    f_obs = f - 0.5*reg_par*((s-s_b)'*(B_inv*(s-s_b)));
+    g_obs = g - reg_par*(B_inv*(s-s_b));
+
+    r  = compute_correlation_coefficient(c, c_star);
+    r2 = compute_coefficient_of_determination(c, c_star);
+
+    m = dot(space_int_wgt, s);
+    m_norm = m/m_star;
+
+    fprintf('| %s | %4d | %8.6e |  %8.6e |  %9.6e | %8.6e | %8.6e |\n', datestr(now), iter.it, f, max(abs(g_proj)),r2,r,m_norm);
+    
+    file_num = generate_file_num(iter.it, max_iters + 1);
+    results_path = fullfile(iter_dir, [iter_label, file_num, '.mat']);
+    save(results_path, 'f', 'f_obs', 'g', 'g_proj', 'g_obs', 's', 'x', 'c', 'r', 'r2', 'm', 'm_norm');
 
   case 'done'
     fprintf('------------------------------------------------------------------------------------------------------------\n');
     fprintf('\n');
+    
+    % Save the initial values to the user_data array
+    user_data.f(1) = f_0;
+    user_data.g(:,1) = g_0;
+    user_data.g_proj(:,1) = g_proj_0;
+    user_data.x(:,1) = x_0;
+
+    % Trim the user_data arrays if the optimization routine exits before
+    % the maximum number of iteration is reached.
     user_data.f = user_data.f(1:user_data.its);
+    user_data.g = user_data.g(:,1:user_data.its);
+    user_data.g_proj = user_data.g_proj(:,1:user_data.its);
     user_data.x = user_data.x(:,1:user_data.its);
+    user_data.iters = (0:user_data.its-1)';
+
 end
 
 stop = 0;

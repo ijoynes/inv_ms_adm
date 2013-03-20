@@ -45,18 +45,16 @@ function df_dx = solve_adjoint_advection_diffusion_equation(c_k, c_star, t, H, s
 assert( 7 <= nargin && nargin <= 9 ); 
 
 % Check c_k
-assert( isvector(c_k) );                % ensure s is a vector
 assert( isnumeric(c_k) );               % ensure s is numeric array
 
 % Check c_star
-assert( isvector(c_star) );                % ensure s is a vector
 assert( isnumeric(c_star) );               % ensure s is numeric array
 
 
 % Check t
 assert( isvector(t) );            % ensure t is a vector
 assert( isnumeric(t) );           % ensure t is numeric array
-assert( t(1) = 0 );               % ensure t starts at 0
+assert( t(1) == 0 );               % ensure t starts at 0
 nt = length(t);
 for n = 2 : nt                    % ensure t contains sequential time 
   assert( t(n-1) < t(n) );        %   steps
@@ -80,8 +78,8 @@ if save_flag
 end
 
 % Check operator_dir
-assert( ischar(operator_dir) ); % ensure operator_dir is a string
-assert( exist( operator_dir, 'dir') == 7 );
+assert( ischar(oper_dir) ); % ensure operator_dir is a string
+assert( exist( oper_dir, 'dir') == 7 );
 
 % If theta is supplied make sure it contains valid data.
 if nargin >= 8                        % if theta is supplied
@@ -89,7 +87,7 @@ if nargin >= 8                        % if theta is supplied
   assert( isnumeric(theta) );         % ensure theta is a number
   assert( 0 <= theta && theta <= 1 ); % ensure 0  <= theta <= 1
 else
-  theta = 0.5 % default value (Crank-Nicholson method)
+  theta = 0.5; % default value (Crank-Nicholson method)
 end
 
 % If c_0 is supplied make sure it contains valid data.  If c_0 is not 
@@ -125,11 +123,11 @@ y = H'*(c_k(nt,:)-c_star(nt,:))';
 %   Make sure that the final value of the adjoint field is supposed to be the receptor residual error and not zero instead!
 if save_flag
   file_num = generate_file_num(nt-1, nt);
-  adjoint_path = fullfile(working_dir [adj_label file_num '.mat']);
+  adjoint_path = fullfile(working_dir, [adj_label file_num '.mat']);
   save(adjoint_path,'y');
 end
 
-uPath = fullfile(simDir,'U.mat');
+uPath = fullfile(working_dir, '..', 'U.mat');
 load(uPath);
 
 % load operators for the last time step
@@ -165,7 +163,7 @@ for n = nt-1 :-1: 1
   % Save the current state of the discretized adjoint field if it is desired.
   if save_flag
     file_num = generate_file_num(n-1, nt);
-    adjoint_path = fullfile(working_dir [adj_label file_num '.mat']);
+    adjoint_path = fullfile(working_dir, [adj_label file_num '.mat']);
     save(adjoint_path,'y');
   end
 

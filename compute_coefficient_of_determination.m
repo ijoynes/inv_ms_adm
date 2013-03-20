@@ -15,5 +15,5 @@ den = sum((y-y_mean).^2);
 if den == 0
   r2 = 0;
 else
-  r2 = 1 - sum((y-f).^2))/sum((y-y_mean).^2);
+  r2 = 1 - sum((y-f).^2)/sum((y-y_mean).^2);
 end
