@@ -22,7 +22,7 @@ g_obs = solve_adjoint_advection_diffusion_equation(c, c_star, t, H, save_flag, a
 
 % add sensitivity of objective function to the regularization term
 g = g_obs + reg_par*(B_inv*(s-s_b));
-g_proj = projgr(x, g, lb, ub, nbd);
+
 
 % This is a hack to ensure that the results for the initial starting 
 % conditions of the minimization routine are saved.  The first iteration
@@ -30,18 +30,27 @@ g_proj = projgr(x, g, lb, ub, nbd);
 % evaluations while performing a line-search to ensure that the 
 % objective is reduced in the next iteration.
 if nPass == 0
-
-  f_0 = f;
-  g_0 = g;
-  g_proj_0 = g_proj;
-  x_0 = x;
-
+  
+  g_proj = projgr(x, g, lb, ub, nbd);
   r  = compute_correlation_coefficient(c, c_star);
   r2 = compute_coefficient_of_determination(c, c_star);
-
+  
   m = dot(space_int_wgt, s);
   m_norm = m/m_star;
-  fprintf('| %s | %4d | %8.5e |  %8.5e | %9.5e | %8.5e | %8.5e |\n', datestr(now), nPass, f, norm(g_proj,Inf),r2,r, m_norm);
+
+  x_0 = x;
+  s_0 = s;
+  f_0 = f;
+  f_obs_0 = f_obs;
+  g_0 = g;
+  g_proj_0 = g_proj;
+  g_obs_0 = g_obs;
+
+  r_0 = r;
+  r2_0 = r2;
+  m_0 = m;
+
+  fprintf('| %s | %4d | %8.5e |  %8.5e | %9.5e | %8.5e | %8.5e |\n', datestr(now), nPass, f/f_0, norm(g_proj,Inf)/norm(g_proj_0,Inf),r2,r, m_norm);
 
   file_num = generate_file_num(nPass, max_iters);
   results_path = fullfile(iter_dir, [iter_label, file_num, '.mat']);
