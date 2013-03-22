@@ -41,7 +41,7 @@ if nPass == 0
 
   m = dot(space_int_wgt, s);
   m_norm = m/m_star;
-  fprintf('| %s | %4d | %8.6e |  %8.6e | %9.6e | %8.6e | %8.6e |\n', datestr(now), nPass, f, max(abs(g_proj)),r2,r, m_norm);
+  fprintf('| %s | %4d | %8.5e |  %8.5e | %9.5e | %8.5e | %8.5e |\n', datestr(now), nPass, f, norm(g_proj,Inf),r2,r, m_norm);
 
   file_num = generate_file_num(nPass, max_iters);
   results_path = fullfile(iter_dir, [iter_label, file_num, '.mat']);

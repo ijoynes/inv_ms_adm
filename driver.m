@@ -1,4 +1,4 @@
-function [x, f, exit_flag, user_data] = driver(controls_file_path)
+function [exit_flag, x, f, user_data] = driver(controls_file_path)
 %DRIVER setups up and runs the Inverse Micro-Scale Atmospheric 
 % Dispersion Model to find the optimum volumetric source to profile 
 % to recreate synthetic receptor observations from a known source
@@ -71,21 +71,24 @@ function [x, f, exit_flag, user_data] = driver(controls_file_path)
 %   function and callback function are declared as 
 %   global variables.
 global_vars
-
+fprintf('Start of Inverse Micro-Scale Atmospheric Dispersion Model: %s\n', datestr(now) );
+assert(exist(controls_file_path,'file')==2, 'The control file "%s" was not found.', controls_file_path);
 exit_flag = 2;  % initialize to the error condition
 
 % Write the simulation start date and time to the log file.
-fprintf('%s\n', datestr(now) );
 
-% Set the control file to read only.
-fileattrib(controlsFilePath,'-w'); 
 
 % Read the run parameters from the  control file and write their 
 % values to the log file.
+fprintf('\n');
+fprintf('----------------------------------------------------------\n');
+fprintf('|               Control parameter values:                |\n');
+fprintf('----------------------------------------------------------\n');
 [sim_dir, oper_dir, domainPath, paramPath, sensorPath, sourcePath, ... 
   passPath, tMax, dt, noise, max_iters, reg_par ...
-  factr, pgtol, m, iprint, save_flag] = readControls(controlsFilePath)
-
+  factr, pgtol, m, iprint, save_flag] = readControls(controls_file_path)
+fprintf('----------------------------------------------------------\n');
+fprintf('\n');
 
 obs_dir = fullfile(sim_dir, 'Observation');
 conc_dir = fullfile(sim_dir, 'Concentration');
@@ -123,8 +126,6 @@ load(domainPath);
 load(sensorPath);
 load(sourcePath);
 
-
-
 %-----------------------------------------------------------------------
 % The integration of a scalar over the entire domain can be 
 % approximated numerically by summing the integral of the scalar over
@@ -145,6 +146,7 @@ load(sourcePath);
 % total_emission_rate = dot(space_int_wgt, s);
 %
 % Construct the spatial integration weight vector
+fprintf('\nComputing spatial integration weight vector...\n\n');
 space_int_wgt = compute_spatial_integration_weight_vector(tri,xy);
 
 
@@ -155,6 +157,7 @@ space_int_wgt = compute_spatial_integration_weight_vector(tri,xy);
 % source distribution (s_k) and the discrete representation of the 
 % assumed prior source distribution (s_b), such that this relationship
 % is true.
+fprintf('\nComputing inverse of source error covariance matrix...\n\n');
 B_inv = compute_inverse_source_error_covariance_matrix(tri,xy);
 
 %-----------------------------------------------------------------------
@@ -164,6 +167,7 @@ B_inv = compute_inverse_source_error_covariance_matrix(tri,xy);
 % the nodes of the element which contains the receptor.  The weights   |
 % would be the values of the finite element shape functions at the     |
 % location of the receptor.                                            |
+fprintf('\nComputing observation matrix...\n\n');
 H = compute_observation_matrix(tri, xy, receptor_xy); %                |
 %-----------------------------------------------------------------------
 
@@ -173,6 +177,7 @@ H = compute_observation_matrix(tri, xy, receptor_xy); %                |
 % The volumetric emission rate of each source is scaled by the inverse
 % of the size of the element such that a cluster of large or small 
 % elements would have the same total emission rate.
+fprintf('\nComputing discretized volumetric emission rate of known source...\n\n');
 s_star = place_sources(tri, xy, source_xy, source_m);
 %-----------------------------------------------------------------------
 
@@ -215,7 +220,9 @@ end
 % with its total emission rate.
 save(fullfile(iter_dir, [iter_label 'Correct.mat']), 's_star','m_star');
 
+
 % Compute the synthetic receptor observation from the known source.
+fprintf('\nComputing synthetic receptor observations...\n\n');
 c_star_without_noise = solve_advection_diffusion_equation(s_star, t, H, save_flag, obs_dir, oper_dir);
 
 % Add Gaussian distributed noise to the synthetic receptor observations.

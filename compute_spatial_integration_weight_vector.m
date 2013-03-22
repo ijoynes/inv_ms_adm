@@ -1,4 +1,4 @@
-function sp_int_wgt = compute_spatial_integration_weight_vector(tri,xy)
+function sp_int_wgt = compute_spatial_integration_weight_vector(T, X)
 % The integration of a scalar over the entire domain can be 
 % approximated numerically by summing the integral of the scalar over
 % each element.  The integral of the scalar over an element can be 
@@ -22,19 +22,27 @@ function sp_int_wgt = compute_spatial_integration_weight_vector(tri,xy)
 assert( nargin == 2);
 assert(nargout == 1);
 
-assert(isnumeric(tri));
-assert(ismatrix(tri));
-assert(size(tri,2)==3);
-assert(all(~isnan(tri(:))));
+assert(isnumeric(T),'Node tessellation list must contain only numeric values.');
+assert(ismatrix(T), 'Node tessellation list must be a matrix.');
+assert(all(isfinite(T(:))), 'Node tessellation list must contain only finite values.');      % there are no NaNs or Infs
+assert(all(rem(T(:),1)==0), 'Node tessellation list must contain integers.');      % the values of T are integers
 
-assert(isnumeric(xy));
-assert(ismatrix(xy));
-assert(size(xy,2)==2);
-assert(all(~isnan(xy(:))));
+assert(isnumeric(X), 'Mesh node coordinate list must contain only numeric values.');
+assert(ismatrix(X), 'Mesh node coordinate list must be a matrix.');
+assert(all(isfinite(X(:))), 'Mesh node coordinate list must contain only finite values.');
+assert(size(T,2) == size(X,2)+1, 'Tessellation must represent simplexes.');  % the mesh represents simplexes
+
+[nSimplex] = size(T,1);
+[nNodes, nDims] = size(X);
+
+assert(all(1 <= T(:)) & all(T(:) <= nNodes), ...
+  'Node tessellation list contains invalid values.');
 
 sp_int_wgt = zeros(nNodes,1);
-for i = 1 : nTris
-  sp_int_wgt(tri(i,:)) = sp_int_wgt(tri(i,:)) + ...
-                             det([ones(3,1) xy(tri(i,:),:) ] );
+for i = 1 : nSimplex
+  sp_int_wgt(T(i,:)) = sp_int_wgt(T(i,:)) + ...
+                             det([ones(nDims+1,1) X(T(i,:),:) ] );
 end
-sp_int_wgt = sp_int_wgt/6;
+
+assert(all(sp_int_wgt > 0), 'Spatial integration weight vector contains non-positive values.');
+sp_int_wgt = sp_int_wgt/factorial(nDims+1);

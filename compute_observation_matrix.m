@@ -54,23 +54,36 @@ function H = compute_observation_matrix(T, X, x)
 
 % Ensure that the number of spatial dimensions of the mesh nodes 
 % coordinates and receptor coordinates match.
-assert(nargin == 3);
-assert(nargout == 1);
-assert(size(X, 2) == size(x, 2));
+if nargin < 3
+  assert(nargin == 3, 'Not enough input arguments.');
+elseif nargin > 3
+  assert(nargin == 3, 'Too many input arguments.');
+end
+assert(nargout <= 1, 'Too many output arguments.');
 
-% Consider testing T for integers
+assert(ismatrix(T), 'Node tessellation list must be a matrix.');
+assert(ismatrix(X), 'Mesh node coordinate list must be a matrix.');
+assert(ismatrix(x), 'Receptor coordinate list must be a matrix.');
 
-assert(isnumeric(T));
-assert(isnumeric(X));
-assert(isnumeric(x));
-assert(size(X,2) == size(x,2));
-assert(size(T,2) == size(X,2)+1); % ensure T represents simplexes
+assert(isnumeric(T), 'Node tessellation list must contain only numeric values.');
+assert(isnumeric(X), 'Mesh node coordinate list must contain only numeric values.');
+assert(isnumeric(x), 'Receptor coordinate list must contain only numeric values.');
+
+assert(all(isfinite(T(:))), 'Node tessellation list must contain only finite values.');      % there are no NaNs or Infs
+assert(all(isfinite(X(:))), 'Mesh node coordinate list must contain only finite values.');
+assert(all(isfinite(x(:))), 'Receptor coordinate list must contain only finite values.');
+
+assert(all(rem(T(:),1)==0), 'Node tessellation list must contain integers.');      % the values of T are integers
+
+assert(size(X, 2) == size(x, 2), 'Number of spatial dimensions of the mesh must match that of the receptors.');
+assert(size(T,2) == size(X,2)+1, 'Tessellation must represent simplexes.'); % ensure T represents simplexes
 
 % Predetermine constants        % Matrix sizes from description
 nReceptors = size(x, 1);        % R
 nNodes     = size(X, 1);        % P
-nElements  = size(T, 1);        % M
-nNodesPerElement = size(T, 2);  % N
+[nElements, nNodesPerElement] = size(T);   % [M, N]
+
+assert(all(1 <= T(:)) & all(T(:) <= nNodes), 'Node tessellation list contains invalid values.');
 
 % Find the indices of the containing triangles and the corresponding
 % barycentric coordinates (shape function values) with a brute force 
@@ -78,18 +91,18 @@ nNodesPerElement = size(T, 2);  % N
 B = nan(nReceptors, nNodesPerElement);
 T_ids = nan(nReceptors,1);
 for i = 1 : nElements
-    A = [ X(T(i, :), :)'; ones(1, nNodesPerElement) ];
-    b = [ x'; ones(1,nReceptors) ];
-    bcc = A\b;
-    for j = 1 : nReceptors
-      if all( -eps <= bcc(:, j) ) && all(bcc(:, j) < 1 + eps )
-          T_ids(j) = i;
-          B(j, :) = bcc(:, j)';
-      end
+  A = [ X(T(i, :), :)'; ones(1, nNodesPerElement) ];
+  b = [ x'; ones(1,nReceptors) ];
+  bcc = A\b;
+  for j = 1 : nReceptors
+    if all( -eps <= bcc(:, j) ) && all(bcc(:, j) < 1 + eps )
+      T_ids(j) = i;
+      B(j, :) = bcc(:, j)';
     end
-    if all(~isnan(T_ids)) % early exit if the containing simplexes of 
-      break;              %   all the receptors have been found
-    end
+  end
+  if all(~isnan(T_ids)) % early exit if the containing simplexes of 
+    break;              %   all the receptors have been found
+  end
 end
 
 % Compute the sparse observation matrix H
@@ -106,8 +119,8 @@ for i = 1 : nReceptors
   end
 end
 
-assert(all(~isnan(Hv)));
-assert(all(~isnan(row)));
-assert(all(~isnan(coll)));
+assert(all(isfinite(Hv)), 'Observation matrix contains invalid values.');
+assert(all(isfinite(row)), 'Observation matrix contains invalid row indexes.');
+assert(all(isfinite(col)), 'Observation matrix contains invalid col indexes.');
 
 H = sparse(row, col, Hv, nReceptors, nNodes);

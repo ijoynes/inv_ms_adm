@@ -6,11 +6,12 @@ assert(isnumeric(x));
 assert(ismatrix(x));
 assert(all(isfinite(x(:))));
 
-assert(isnumeric(origin));
-assert(isvector(origin));
-assert(all(isfinite(origin)));
-
-assert(size(x,2) == length(origin));
+if nargin == 2
+  assert(isnumeric(origin));
+  assert(isvector(origin));
+  assert(all(isfinite(origin)));
+  assert(size(x,2) == length(origin));
+end
 
 [nNodes, nDims] = size(x);
 
@@ -20,4 +21,4 @@ elseif size(origin,1) > 1   % If the origin was supplied as a column
   origin = origin'          %   vector then change it to a row vector.
 end
 
-x = x + (origin - min(x)) * ones(nNodes,1);
+x = x + ones(nNodes,1) * (origin - min(x));

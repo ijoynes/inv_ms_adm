@@ -7,6 +7,6 @@ mex lbfgs_mex.c list.c utils.c routines.f
 movefile(['lbfgs_mex.' mexext], '..');
 cd ..
 
-% fprintf('Compiling Inverse Micro-Scale Atmospheric Dispersion Model...\n');
-% mcc -m driver.m -o imsadm.out
+fprintf('Compiling Inverse Micro-Scale Atmospheric Dispersion Model...\n');
+mcc -m driver.m -o imsadm.out
 fprintf('Done.\n');
