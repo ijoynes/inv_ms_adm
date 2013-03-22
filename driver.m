@@ -1,4 +1,4 @@
-function exitflag = driver(controlsFilePath)
+function [x, f, exit_flag, user_data] = driver(controls_file_path)
 %DRIVER setups up and runs the Inverse Micro-Scale Atmospheric 
 % Dispersion Model to find the optimum volumetric source to profile 
 % to recreate synthetic receptor observations from a known source
@@ -27,7 +27,17 @@ function exitflag = driver(controlsFilePath)
 % REQUIRED FILES
 %
 % INPUTS
+%   controls_file_path    file path to a text file containing the values
+%                           of the parameters
 %
+% OUTPUS:
+%   x           final value
+%   f           fn(x)
+%   user_data   user data from callback function
+%   exit_flag   0: algorithm converged or max iterations reached
+%               1: abnormal termination
+%               2: error
+%               3: unknown cause of termination
 %
 % VARIABLES
 %   sim_dir   Directory path the the simulation results.
@@ -55,16 +65,14 @@ function exitflag = driver(controlsFilePath)
 
 
 % Declare the global variables. 
-% The LBFGS function does not allow for additional variables to be 
-% passed to the objective function (or any other function the 
-% objective function may call).  Critical variables which are 
-% determined before the objective function is called are declared as 
-% global variables.
-%%%global sim_dir operDir domainPath paramPath sensorPath sourcePath ...
-%%%        passPath tMax noise reg_par signal_o signal_c ...
-%%%        space_int_wgt m_star nPass B_inv
-
+%   The LBFGS function does not allow for additional variables to be 
+%   passed to the objective function or callback function.  Critical 
+%   variables which are required to pass between the driver, objective 
+%   function and callback function are declared as 
+%   global variables.
 global_vars
+
+exit_flag = 2;  % initialize to the error condition
 
 % Write the simulation start date and time to the log file.
 fprintf('%s\n', datestr(now) );
@@ -117,7 +125,7 @@ load(sourcePath);
 
 
 
-%---------------------------------------------------------------------
+%-----------------------------------------------------------------------
 % The integration of a scalar over the entire domain can be 
 % approximated numerically by summing the integral of the scalar over
 % each element.  The integral of the scalar over an element can be 
@@ -137,64 +145,48 @@ load(sourcePath);
 % total_emission_rate = dot(space_int_wgt, s);
 %
 % Construct the spatial integration weight vector
-space_int_wgt = zeros(nNodes,1);
-for i = 1 : nTris
-  space_int_wgt(tri(i,:)) = space_int_wgt(tri(i,:)) + ...
-                             det([ones(3,1) xy(tri(i,:),:) ] );
-end
-space_int_wgt = space_int_wgt/6;
-%---------------------------------------------------------------------
+space_int_wgt = compute_spatial_integration_weight_vector(tri,xy);
+
+
+%-----------------------------------------------------------------------
 % Construct the inverse of the covariance matrix of the estimated 
 % background error.  This matrix will numerically integrate the square
 % of the residual between the discrete representation of the candidate 
 % source distribution (s_k) and the discrete representation of the 
 % assumed prior source distribution (s_b), such that this relationship
 % is true.
-%
-% int((s_k-s_b)^2, Omega) = (s_k-s_b)'*B^-1*(s_k-s_b)
-Bv = nan(nTris*3*3,1);
-row = nan(nTris*3*3,1);
-col = nan(nTris*3*3,1);
-index = 0;
-for i = 1 : nTris
-    Be = [ 2 1 1; 1 2 1; 1 1 2] * det([ones(3,1), xy(tri(i,:),:)]);
-    for j = 1 : 3
-        for k = 1 : 3
-            index = index + 1;
-            Bv(index) = Be(j,k);
-            row(index) = tri(i,j);
-            col(index) = tri(i,k);
-        end
-    end
-end
-Bv = Bv/24;
-B_inv = sparse(row,col,Bv,nNodes,nNodes);
-clear Bv Be row col index i j k
+B_inv = compute_inverse_source_error_covariance_matrix(tri,xy);
 
-% Move sensors to the closest mesh nodes
-% This step could be ignored if an observation matrix H was 
-% constructed to perform a weighted average of the concentration at 
-% the nodes of the element which contains the receptor.  The weights 
-% would be the values of the finite element shape functions at the 
-% location of the receptor. 
-H = compute_observation_matrix(tri, xy, receptor_xy);
+%-----------------------------------------------------------------------
+% Move sensors to the closest mesh nodes                               |
+% This step could be ignored if an observation matrix H was            |
+% constructed to perform a weighted average of the concentration at    |
+% the nodes of the element which contains the receptor.  The weights   |
+% would be the values of the finite element shape functions at the     |
+% location of the receptor.                                            |
+H = compute_observation_matrix(tri, xy, receptor_xy); %                |
+%-----------------------------------------------------------------------
 
+%-----------------------------------------------------------------------
 % Determine discrete representation of the emission source
 % Again, this function moves the sources to the nearest mesh nodes.
 % The volumetric emission rate of each source is scaled by the inverse
 % of the size of the element such that a cluster of large or small 
 % elements would have the same total emission rate.
 s_star = place_sources(tri, xy, source_xy, source_m);
+%-----------------------------------------------------------------------
 
+%-----------------------------------------------------------------------
 % Compute the total emission rate in kg/s of the known source by 
 % integrating the volumetric source emission rate over the spatial 
 % domain.  This integration is approximated numerically with the 
 % spatial integration weight vector.  
 m_star = dot(space_int_wgt, s_star);
+%-----------------------------------------------------------------------
 
 % Reorient the domain such that the lower left corner has the 
 % coordinate (0,0)
-xy = xy - ones(nNodes,1)*min(xy);
+xy = move_domain_origin(xy);
 
 % Create the time step vector
 t = (0:dt:tMax)';
@@ -202,7 +194,8 @@ nt = length(t);
 
 c_0 = zeros(nNodes,1);
 
-% --------------------------------------------------------------------
+
+% ----------------------------------------------------------------------
 % If an initial source guess is present in the file path
 %   sim_dir/Source/Source_0.mat
 % then load that initial guess.  However if no initial guess is present
@@ -222,30 +215,13 @@ end
 % with its total emission rate.
 save(fullfile(iter_dir, [iter_label 'Correct.mat']), 's_star','m_star');
 
-% Compute the evolution of the plume from the known source
-%SolveConcentrationTransport(t,E,c_0,'o',noise);
+% Compute the synthetic receptor observation from the known source.
 c_star_without_noise = solve_advection_diffusion_equation(s_star, t, H, save_flag, obs_dir, oper_dir);
+
+% Add Gaussian distributed noise to the synthetic receptor observations.
 c_star = add_observation_noise(c_star_without_noise, noise);
 
-% Pre-allocate space for the synthetic and candidate receptor 
-% observations
-%signal_o=nan(nt,length(sensorIndex));
-%signal_c=nan(nt,length(sensorIndex));
-
-% Extract the synthetic receptor observations from the known source
-%for i = 1 : nt
-%  load(fullfile(sim_dir, 'Observation', ...
-%                  ['Observation_' int2str(i-1) '.mat']),'o')
-%  if noise > 0 || noise == -1 % add noise to the receptor observations
-%    load(fullfile(sim_dir, 'Noise', ...
-%                    ['Noise_' int2str(i-1) '.mat']), 'o_error')
-%    signal_o(i,:) = o(sensorIndex) + o_error(sensorIndex);
-%  else
-%    signal_o(i,:) = o(sensorIndex);
-%  end
-%end
-
-% Append the synthetic receptor observations to the known source file
+% Append the synthetic receptor observations to the known source file.
 save(fullfile(iter_dir,[iter_label 'Correct.mat']),'c_star', 'c_star_without_noise', '-append');
 
 % These should be global variables
@@ -299,9 +275,10 @@ opts = lbfgs_options('iprint', iprint, ...
                      'cb', @callback);
            
 
+% Set the assumed prior source distribution to the same as the initial 
+% candidate source distribution.
 s_b = volumetric_emission_rate(x);
-[x,f,exit_flag,user_data] = lbfgs(fn,x0, lb, ub, nbd, opts);
-
+[x, f, exit_flag, user_data] = lbfgs(fn, x0, lb, ub, nbd, opts);
 
 save(fullfile(sim_dir,'Source','Optimum_Source.mat'),'x','f');
 save(fullfile(sim_dir,'exit_dump.mat'));
