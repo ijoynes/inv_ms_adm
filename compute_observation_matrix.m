@@ -23,13 +23,11 @@ function H = compute_observation_matrix(T, X, x)
 %
 %   X   P-by-Q matrix representing the coordinates of the mesh nodes.
 %         Where P is the number of nodes in the mesh and Q represents 
-%         the number of spatial dimensions of the mesh.  Q must fall
-%         within the range 1<=Q<=3.
+%         the number of spatial dimensions of the mesh.
 %
 %   x   R-by-Q matrix representing the coordinates of the receptors.
 %         Where R is the number of receptors in the domain and Q 
-%         represents the number of spatial dimensions of the mesh.  Q 
-%         must fall within the range 1<=Q<=3.
+%         represents the number of spatial dimensions of the mesh.
 %
 % OUTPUS:
 %   H   R-by-P sparse observation matrix for computing the receptor 
@@ -56,7 +54,8 @@ function H = compute_observation_matrix(T, X, x)
 
 % Ensure that the number of spatial dimensions of the mesh nodes 
 % coordinates and receptor coordinates match.
-assert(nargin == 3)
+assert(nargin == 3);
+assert(nargout == 1);
 assert(size(X, 2) == size(x, 2));
 
 % Consider testing T for integers
@@ -106,4 +105,9 @@ for i = 1 : nReceptors
     col(index) =  T(T_ids(i), j);
   end
 end
+
+assert(all(~isnan(Hv)));
+assert(all(~isnan(row)));
+assert(all(~isnan(coll)));
+
 H = sparse(row, col, Hv, nReceptors, nNodes);

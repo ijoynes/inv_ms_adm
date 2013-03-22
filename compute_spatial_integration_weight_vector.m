@@ -25,12 +25,12 @@ assert(nargout == 1);
 assert(isnumeric(tri));
 assert(ismatrix(tri));
 assert(size(tri,2)==3);
-assert(all(~isnan(tri)));
+assert(all(~isnan(tri(:))));
 
 assert(isnumeric(xy));
 assert(ismatrix(xy));
 assert(size(xy,2)==2);
-assert(all(~isnan(xy)));
+assert(all(~isnan(xy(:))));
 
 sp_int_wgt = zeros(nNodes,1);
 for i = 1 : nTris
