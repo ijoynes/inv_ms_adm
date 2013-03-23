@@ -5,12 +5,15 @@ global_vars
 assert(nargin == 1);
 assert(nargout == 2);
 
+
 nt = length(t);
 
 s = volumetric_emission_rate(x);
+assert( length(s) = length(s_b), 's must have the same length as s_b');
 
 c = solve_advection_diffusion_equation(s, t, H, save_flag, conc_dir, oper_dir);
 
+assert( all(size(c)=size(c_star)), 'c must have the same length as c_star');
 f_obs = 0.5*sum(sum((c-c_star).^2));  % f_obs = 0.5*(Hc(x)-c*)'R^-1(Hc(x)-c*), R^-1 is assumed to be the identity matrix
 
 f = f_obs + 0.5*reg_par*((s-s_b)'*(B_inv*(s-s_b)));
