@@ -4,6 +4,18 @@
 		"selected_items":
 		[
 			[
+				"bicgsta",
+				"bicgstabl"
+			],
+			[
+				"gd",
+				"gd_val"
+			],
+			[
+				"control",
+				"controls_file_path"
+			],
+			[
 				"g",
 				"g_proj"
 			],
@@ -63,7 +75,7 @@
 			"file": "solve_advection_diffusion_equation.m",
 			"settings":
 			{
-				"buffer_size": 14493,
+				"buffer_size": 14938,
 				"line_ending": "Windows"
 			}
 		},
@@ -87,7 +99,7 @@
 			"file": "driver.m",
 			"settings":
 			{
-				"buffer_size": 13679,
+				"buffer_size": 13802,
 				"line_ending": "Windows"
 			}
 		},
@@ -136,7 +148,7 @@
 			"file": "callback.m",
 			"settings":
 			{
-				"buffer_size": 4333,
+				"buffer_size": 4381,
 				"line_ending": "Windows"
 			}
 		},
@@ -144,7 +156,7 @@
 			"file": "global_vars.m",
 			"settings":
 			{
-				"buffer_size": 312,
+				"buffer_size": 337,
 				"line_ending": "Windows"
 			}
 		},
@@ -152,14 +164,15 @@
 			"file": "objective.m",
 			"settings":
 			{
-				"buffer_size": 1941,
+				"buffer_size": 1955,
 				"line_ending": "Windows"
 			}
 		},
 		{
+			"file": "linear_solver_profiler.m",
 			"settings":
 			{
-				"buffer_size": 0,
+				"buffer_size": 2710,
 				"line_ending": "Windows"
 			}
 		}
@@ -167,9 +180,17 @@
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 392.0,
+		"height": 334.0,
 		"selected_items":
 		[
+			[
+				":w",
+				":w - Save"
+			],
+			[
+				":0",
+				":0 - BOF"
+			],
 			[
 				"func",
 				"Snippet: small function"
@@ -272,7 +293,7 @@
 	"groups":
 	[
 		{
-			"selected": 11,
+			"selected": 2,
 			"sheets":
 			[
 				{
@@ -340,15 +361,15 @@
 					"file": "solve_advection_diffusion_equation.m",
 					"settings":
 					{
-						"buffer_size": 14493,
+						"buffer_size": 14938,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								11114,
+								11114
 							]
 						],
 						"settings":
@@ -359,7 +380,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 3173.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -421,15 +442,15 @@
 					"file": "driver.m",
 					"settings":
 					{
-						"buffer_size": 13679,
+						"buffer_size": 13802,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								8293,
-								8293
+								5703,
+								5703
 							]
 						],
 						"settings":
@@ -440,7 +461,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 2415.0,
+						"translation.y": 1451.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -587,15 +608,15 @@
 					"file": "callback.m",
 					"settings":
 					{
-						"buffer_size": 4333,
+						"buffer_size": 4381,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3690,
-								3690
+								1025,
+								1025
 							]
 						],
 						"settings":
@@ -605,7 +626,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 799.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -615,15 +636,15 @@
 					"file": "global_vars.m",
 					"settings":
 					{
-						"buffer_size": 312,
+						"buffer_size": 337,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								278,
-								278
+								337,
+								337
 							]
 						],
 						"settings":
@@ -641,15 +662,15 @@
 					"file": "objective.m",
 					"settings":
 					{
-						"buffer_size": 1941,
+						"buffer_size": 1955,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1923,
-								1923
+								1083,
+								1083
 							]
 						],
 						"settings":
@@ -659,32 +680,33 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 193.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 14,
+					"file": "linear_solver_profiler.m",
 					"settings":
 					{
-						"buffer_size": 0,
+						"buffer_size": 2710,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								2087,
+								2087
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/Text/Plain text.tmLanguage"
+							"syntax": "Packages/Matlab/Matlab.tmLanguage"
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 1287.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -734,12 +756,44 @@
 		"selected_items":
 		[
 			[
-				"ca",
+				"li",
+				"linear_solver_profiler.m"
+			],
+			[
+				"",
+				"solve_advection_diffusion_equation.m"
+			],
+			[
+				"d",
+				"driver.m"
+			],
+			[
+				"g",
+				"global_vars.m"
+			],
+			[
+				"dr",
+				"driver.m"
+			],
+			[
+				"cal",
 				"callback.m"
+			],
+			[
+				"dri",
+				"driver.m"
+			],
+			[
+				"ob",
+				"objective.m"
 			],
 			[
 				"glo",
 				"global_vars.m"
+			],
+			[
+				"ca",
+				"callback.m"
 			],
 			[
 				"cl",
@@ -763,7 +817,7 @@
 	"show_minimap": true,
 	"show_open_files": false,
 	"show_tabs": true,
-	"side_bar_visible": true,
+	"side_bar_visible": false,
 	"side_bar_width": 190.0,
 	"status_bar_visible": true
 }
