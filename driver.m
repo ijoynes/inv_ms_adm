@@ -84,6 +84,7 @@ fprintf('\n');
 fprintf('----------------------------------------------------------\n');
 fprintf('|               Control parameter values:                |\n');
 fprintf('----------------------------------------------------------\n');
+fprintf('controls_file_path = %s\n', controls_file_path);
 [sim_dir, oper_dir, domainPath, paramPath, sensorPath, sourcePath, ... 
   passPath, tMax, dt, noise, max_iters, reg_par ...
   factr, pgtol, m, iprint, save_flag] = readControls(controls_file_path)
@@ -125,6 +126,9 @@ mkdir(fullfile(sim_dir,'Noise'));
 load(domainPath);
 load(sensorPath);
 load(sourcePath);
+
+gd_idx = unique(boundary(:));
+gd_val = zeros(length(gd_idx),1);
 
 %-----------------------------------------------------------------------
 % The integration of a scalar over the entire domain can be 

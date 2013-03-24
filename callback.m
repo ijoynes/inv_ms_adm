@@ -12,7 +12,9 @@ switch state
     fprintf('|       Date/Time      | Iter |    fk/f0    | |pgk|/|pg0|  |      r^2     |      r      |    m/m*     |\n');
     fprintf('-------------------------------------------------------------------------------------------------------\n');
     n = length(x);
+    nt = length(t);
     nIters = opts.maxits+1;
+    nReceptors = size(H,1);
     
     user_data.its = 1;
     user_data.m_star = m_star;

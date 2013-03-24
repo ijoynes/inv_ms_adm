@@ -139,7 +139,7 @@ function r_obs = solve_advection_diffusion_equation( s, t, H, ...
 % oper_path   string for the file path to load a .mat file containing  |
 %               finite element operators                               |
 %-----------------------------------------------------------------------
-
+global gd_idx gd_val
 %-----------------------------------------------------------------------
 % CHECK FOR VALID INPUT                                                |
 %-----------------------------------------------------------------------
@@ -179,8 +179,7 @@ assert( isscalar(save_flag) );
 if save_flag
   assert( ischar(working_dir) );  % ensure working_dir is a string
   assert( exist( working_dir, 'dir') == 7 );  % ensure the working
-                                              %   directory exists
-end
+end                                           %   directory exists
 
 % Check operator_dir
 assert( ischar(operator_dir) ); % ensure operator_dir is a string
@@ -236,6 +235,13 @@ Kn = K;
 % solution of the source with in initial flow conditions.
 if nargin < 8
   c_0 = U'*((U*Kn*U')\(U*Cn*s));  % compute the initial concentration
+  % A = Kn;
+  % b = Cn*s;
+  % for i = 1 : length(gd_idx)
+  %   A(gd_idx(i),gd_idx(i)) = A(gd_idx(i),gd_idx(i))*1E15;
+  %   b(gd_idx(i)) = gd_val(i)*A(gd_idx(i),gd_idx(i));
+  % end
+  % c_0 = A\b;
 end
 c = c_0;
 clear c_0   % c_0 is no longer required
@@ -263,6 +269,16 @@ for n = 1 : nt - 1
   A = U*(C/dt+theta*K)*U';
   b = U*C*(c/dt-(1-theta)*(Cn\(Kn*c))+s);
   c = U'*(A\b);
+
+  % A = C/dt+theta*K;
+  % b = C*(c/dt-(1-theta)*(Cn\(Kn*c))+s);
+
+  % for i = 1 : length(gd_idx)
+  %   A(gd_idx(i),gd_idx(i)) = A(gd_idx(i),gd_idx(i))*1E15;
+  %   b(gd_idx(i)) = gd_val(i)*A(gd_idx(i),gd_idx(i));
+  % end
+
+  % c = A\b;
 
   % Save discretized tracer concentration field if it is desired.
   if save_flag

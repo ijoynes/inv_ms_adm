@@ -9,11 +9,11 @@ assert(nargout == 2);
 nt = length(t);
 
 s = volumetric_emission_rate(x);
-assert( length(s) = length(s_b), 's must have the same length as s_b');
+assert( length(s) == length(s_b), 's must have the same length as s_b');
 
 c = solve_advection_diffusion_equation(s, t, H, save_flag, conc_dir, oper_dir);
 
-assert( all(size(c)=size(c_star)), 'c must have the same length as c_star');
+assert( all(size(c) == size(c_star)), 'c must have the same length as c_star');
 f_obs = 0.5*sum(sum((c-c_star).^2));  % f_obs = 0.5*(Hc(x)-c*)'R^-1(Hc(x)-c*), R^-1 is assumed to be the identity matrix
 
 f = f_obs + 0.5*reg_par*((s-s_b)'*(B_inv*(s-s_b)));
@@ -52,7 +52,7 @@ if nPass == 0
   r_0 = r;
   r2_0 = r2;
   m_0 = m;
-
+  c_0 = c;
   fprintf('| %s | %4d | %8.5e |  %8.5e | %9.5e | %8.5e | %8.5e |\n', datestr(now), nPass, f/f_0, norm(g_proj,Inf)/norm(g_proj_0,Inf),r2,r, m_norm);
 
   file_num = generate_file_num(nPass, max_iters);

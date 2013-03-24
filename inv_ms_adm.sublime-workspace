@@ -136,7 +136,7 @@
 			"file": "callback.m",
 			"settings":
 			{
-				"buffer_size": 4116,
+				"buffer_size": 4333,
 				"line_ending": "Windows"
 			}
 		},
@@ -144,7 +144,7 @@
 			"file": "global_vars.m",
 			"settings":
 			{
-				"buffer_size": 308,
+				"buffer_size": 312,
 				"line_ending": "Windows"
 			}
 		},
@@ -152,17 +152,8 @@
 			"file": "objective.m",
 			"settings":
 			{
-				"buffer_size": 1791,
+				"buffer_size": 1941,
 				"line_ending": "Windows"
-			}
-		},
-		{
-			"contents": "Decision Science News VI/VIM Tutorial\n\n",
-			"settings":
-			{
-				"buffer_size": 39,
-				"line_ending": "Windows",
-				"name": "Decision Science News VI/VIM Tutorial"
 			}
 		},
 		{
@@ -281,7 +272,7 @@
 	"groups":
 	[
 		{
-			"selected": 15,
+			"selected": 11,
 			"sheets":
 			[
 				{
@@ -437,8 +428,8 @@
 						"selection":
 						[
 							[
-								6337,
-								6337
+								8293,
+								8293
 							]
 						],
 						"settings":
@@ -449,7 +440,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 2415.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -522,8 +513,8 @@
 						"selection":
 						[
 							[
-								1115,
-								1115
+								0,
+								0
 							]
 						],
 						"settings":
@@ -532,7 +523,7 @@
 							"syntax": "Packages/Matlab/Matlab.tmLanguage"
 						},
 						"translation.x": 0.0,
-						"translation.y": 262.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -596,15 +587,15 @@
 					"file": "callback.m",
 					"settings":
 					{
-						"buffer_size": 4116,
+						"buffer_size": 4333,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2604,
-								2604
+								3690,
+								3690
 							]
 						],
 						"settings":
@@ -613,8 +604,8 @@
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
-						"translation.x": 22.0,
-						"translation.y": 631.0,
+						"translation.x": 0.0,
+						"translation.y": 799.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -624,15 +615,15 @@
 					"file": "global_vars.m",
 					"settings":
 					{
-						"buffer_size": 308,
+						"buffer_size": 312,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								288,
-								288
+								278,
+								278
 							]
 						],
 						"settings":
@@ -650,15 +641,15 @@
 					"file": "objective.m",
 					"settings":
 					{
-						"buffer_size": 1791,
+						"buffer_size": 1941,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1041,
-								1041
+								1923,
+								1923
 							]
 						],
 						"settings":
@@ -668,39 +659,13 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 225.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 14,
-					"settings":
-					{
-						"buffer_size": 39,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								39,
-								39
-							]
-						],
-						"settings":
-						{
-							"auto_name": "Decision Science News VI/VIM Tutorial",
-							"syntax": "Packages/Text/Plain text.tmLanguage"
-						},
-						"translation.x": 0.0,
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 15,
+					"buffer": 14,
 					"settings":
 					{
 						"buffer_size": 0,
@@ -768,6 +733,22 @@
 		"height": 0.0,
 		"selected_items":
 		[
+			[
+				"ca",
+				"callback.m"
+			],
+			[
+				"glo",
+				"global_vars.m"
+			],
+			[
+				"cl",
+				"callback.m"
+			],
+			[
+				"o",
+				"objective.m"
+			]
 		],
 		"width": 0.0
 	},
