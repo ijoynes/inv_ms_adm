@@ -109,7 +109,7 @@ switch state
     user_data.r      = user_data.r(1:n);
     user_data.r2     = user_data.r2(1:n);
     user_data.m      = user_data.m(1:n);
-
+    user_data.c      = user_data.c(:,:,1:n);
 end
 
 stop = 0;

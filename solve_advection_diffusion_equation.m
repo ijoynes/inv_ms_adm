@@ -220,7 +220,7 @@ nReceptors = size(H, 1);
 r_obs = nan(nt, nReceptors);
 
 
-uPath = fullfile(working_dir, '..', 'U.mat');
+uPath = fullfile(operator_dir, '..', 'U.mat');
 load(uPath);
 
 % load the initial operators 

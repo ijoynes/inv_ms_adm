@@ -201,8 +201,6 @@ xy = move_domain_origin(xy);
 t = (0:dt:tMax)';
 nt = length(t);
 
-c_0 = zeros(nNodes,1);
-
 
 % ----------------------------------------------------------------------
 % If an initial source guess is present in the file path

@@ -127,7 +127,7 @@ if save_flag
   save(adjoint_path,'y');
 end
 
-uPath = fullfile(working_dir, '..', 'U.mat');
+uPath = fullfile(oper_dir, '..', 'U.mat');
 load(uPath);
 
 % load operators for the last time step

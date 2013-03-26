@@ -3,7 +3,7 @@ function [f,g]=objective(x)
 global_vars
 
 assert(nargin == 1);
-assert(nargout == 2);
+assert(nargout <= 2);
 
 
 nt = length(t);
@@ -20,13 +20,18 @@ f = f_obs + 0.5*reg_par*((s-s_b)'*(B_inv*(s-s_b)));
 
 % solve for the sensitivity of the objective function to the receptor
 % observations 
+
+if nargout == 1
+  g_obs = nan(length(x),1);
+  g = nan(length(x),1);
+else
 g_obs = solve_adjoint_advection_diffusion_equation(c, c_star, t, H, save_flag, adj_dir, oper_dir);
 %df_dx = CostFncGrad2(t, nNodes);
 
 % add sensitivity of objective function to the regularization term
 g = g_obs + reg_par*(B_inv*(s-s_b));
 
-
+end
 % This is a hack to ensure that the results for the initial starting 
 % conditions of the minimization routine are saved.  The first iteration
 % of L-BFGS-B typically makes 2 or 3 objective function and gradient 
