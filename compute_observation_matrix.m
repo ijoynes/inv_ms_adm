@@ -94,12 +94,24 @@ for i = 1 : nElements
   A = [ X(T(i, :), :)'; ones(1, nNodesPerElement) ];
   b = [ x'; ones(1,nReceptors) ];
   bcc = A\b;
-  for j = 1 : nReceptors
-    if all( -eps <= bcc(:, j) ) && all(bcc(:, j) < 1 + eps )
-      T_ids(j) = i;
-      B(j, :) = bcc(:, j)';
-    end
-  end
+
+  % This loop scales with the number of receptors.  For a small number 
+  % of receptors the run-time is trivial, but not for a large number of 
+  % receptors.  This loop has been replaced with a vectorized version 
+  % that uses boolean logic indexing.
+  %
+  %for j = 1 : nReceptors
+  %  if all( -eps <= bcc(:, j) ) && all(bcc(:, j) < 1 + eps )
+  %    T_ids(j) = i;
+  %    B(j, :) = bcc(:, j)';
+  %  end
+  %end
+  %
+  % Vectorized version of the previous loop that was removed.
+  index = all(-eps <= bcc) & all(bcc<= 1 + eps);
+  T_ids(index) = i;
+  B(index, :) = bcc(:, index)';
+
   if all(~isnan(T_ids)) % early exit if the containing simplexes of 
     break;              %   all the receptors have been found
   end
