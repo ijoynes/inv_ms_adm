@@ -5,7 +5,7 @@ fprintf('Compiling L-BFGS-B mex files...\n');
 cd lbfgs
 
 % lbfgsb 2.1
-%mex lbfgs_mex.c list.c utils.c routines.f
+mex lbfgs_mex.c list.c utils.c routines.f
 
 % lbfgsb 3.0
 % For an unknown reason Matlab is unable to compile lbfgsb 3.0 into a 
