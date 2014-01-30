@@ -17,7 +17,7 @@ clc
 close
 clear
 
-outName = 'multi_source_reg_study_2013-07-27'
+outName = 'multi_source_reg_study_2013-08-22'
 nRuns = 10;
 
 data_dir = fullfile('E:', 'ijoynes', 'thesis_data_backup');
@@ -108,7 +108,7 @@ fid = fopen(fullfile(outPath, [outName, '.dat']),'w');
 fprintf(fid, 'TITLE = "regularization_study"\n');
 fprintf(fid, ['VARIABLES = "x [m]" ', ...
     '"y [m]" ', ...
-    '"s [mg/s/m<sup>3</sup>]" ', ...
+    '"s [mg<math>W</math>s<sup>-1</sup><math>W</math>m<sup>-3</sup>]" ', ... %'"s [mg/s/m<sup>3</sup>]" ', ...
     '"Iteration #" ', ...
     '"f_i/f_0" ', ... %<math>&</math><sub>i</sub>/<math>&</math><sub>0</sub>" ', ...   % objective function
     '"||g_i||_inf/||g_0||_inf" ', ... %"<math>wwQ&</math><sub>i</sub><math>ww<sub>%</sub></math>/<math>wwQ&</math><sub>0</sub><math>ww<sub>%</sub></math>" ', ... % gradient
@@ -118,7 +118,7 @@ fprintf(fid, ['VARIABLES = "x [m]" ', ...
     '"pdf" ', ...
     '"cdf" ', ...
     '"t [min]" ', ...
-    '"c [mg/m<sup>3</sup>]"\n']);
+    '"c [mg<math>W</math>m<sup>-3</sup>]"\n']);
 
 load(fullfile(domainDir,'Source','Source_Correct.mat'),'E')
 m_star = dot(s2m,E);
@@ -384,7 +384,7 @@ fprintf(fid, 'ELEMENTS = %d\n', nTris);
 fprintf(fid, 'PASSIVEVARLIST = [3-10,12,13]\n');
 fprintf(fid, 'VARSHARELIST = ([1,2]=1)\n');
 fprintf(fid, 'CONNECTIVITYSHAREZONE = 1\n');
-fprintf(fid, '%e\n', percentile_field);
+fprintf(fid, '%e\n', 1-percentile_field);
 
 for iRun = 1 : nRuns
     iter = 0 : (nIters(iRun)-1);

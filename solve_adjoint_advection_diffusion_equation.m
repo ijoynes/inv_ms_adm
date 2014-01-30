@@ -1,4 +1,4 @@
-function df_dx = solve_adjoint_advection_diffusion_equation(c_k, c_star, t, H, save_flag, working_dir, oper_dir, theta, c_0)
+function df_dx = solve_adjoint_advection_diffusion_equation(c_k, c_star, t, H, save_flag, working_dir, oper_dir, time_offset, nt_max, theta, c_0)
 %solve_adjoint_advection_diffusion_equation computes the gradient of 
 % the observational component of objective function with respect to
 % the volumetric source emission rate parameters x with the discrete 
@@ -42,7 +42,7 @@ function df_dx = solve_adjoint_advection_diffusion_equation(c_k, c_star, t, H, s
 %-----------------------------------------------------------------------
 
 % Ensure the require number of arguments are supplied.
-assert( 7 <= nargin && nargin <= 9 ); 
+assert( 7 <= nargin && nargin <= 11 ); 
 
 % Check c_k
 assert( isnumeric(c_k) );               % ensure s is numeric array
@@ -81,8 +81,26 @@ end
 assert( ischar(oper_dir) ); % ensure operator_dir is a string
 assert( exist( oper_dir, 'dir') == 7 );
 
+% If time_offset is supplied make sure it contains valid data.
+if nargin >= 8                        % if time_offset is supplied
+  assert( isscalar(time_offset) );          % ensure time_offset is a scalar
+  assert( isnumeric(time_offset) );         % ensure time_offset is a number
+  assert( time_offset >= 0 ); % ensure time_offset is positive
+else
+  time_offset = 0;
+end
+
+% If nt_max is supplied make sure it contains valid data.
+if nargin >= 9                         % if nt_max is supplied
+  assert( isscalar(nt_max) );          % ensure nt_max is a scalar
+  assert( isnumeric(nt_max) );         % ensure nt_max is a number
+  assert( nt_max >= 1 ); % ensure nt_max is greater than 0
+else
+  nt_max = nt;
+end
+
 % If theta is supplied make sure it contains valid data.
-if nargin >= 8                        % if theta is supplied
+if nargin >= 10                        % if theta is supplied
   assert( isscalar(theta) );          % ensure theta is a scalar
   assert( isnumeric(theta) );         % ensure theta is a number
   assert( 0 <= theta && theta <= 1 ); % ensure 0  <= theta <= 1
@@ -93,7 +111,7 @@ end
 % If c_0 is supplied make sure it contains valid data.  If c_0 is not 
 % supplied then the initial condition is assumed to be the steady 
 % state concentration distribution for the initial flow conditions.
-if nargin == 9              % if c_0 is supplied
+if nargin == 11              % if c_0 is supplied
   assert( isnumeric(c_0) ); % ensure c_0 is numeric array
   assert( isvector(c_0) );  % ensure c_0 is a vector(or scalar 1-by-1)
   if isscalar(c_0)          % constant initial condition
@@ -124,15 +142,18 @@ y = H'*(c_k(nt,:)-c_star(nt,:))';
 if save_flag
   file_num = generate_file_num(nt-1, nt);
   adjoint_path = fullfile(working_dir, [adj_label file_num '.mat']);
+  %fprintf([datestr(now) ' - Saving:  ' adjoint_path '\n']);
   save(adjoint_path,'y');
 end
 
-uPath = fullfile(oper_dir, '..', 'U.mat');
+%uPath = fullfile(oper_dir, '..', 'U.mat');
+uPath = fullfile(oper_dir, 'U.mat');
 load(uPath);
 
 % load operators for the last time step
-file_num = generate_file_num(nt-1, nt);
-oper_path = fullfile(oper_dir, [oper_label num2str(nt-1) '.mat']);
+file_num = generate_file_num(nt-1+time_offset, nt_max);
+oper_path = fullfile(oper_dir, [oper_label file_num '.mat']);
+%fprintf([datestr(now) ' - Loading: ' oper_path '\n']);
 load(oper_path,'C','K');
 
 % copy operators so that they can still be accessed in the next time step.
@@ -141,9 +162,10 @@ Kn = K;
 
 % compute the backwards in time evolution of the adjoint variable and its contribution to the gradient of the objective function.
 for n = nt-1 :-1: 1
-  file_num = generate_file_num(n-1,nt);
-  operatorPath = fullfile(oper_dir, [oper_label file_num '.mat']);
-  load(operatorPath,'C','K');
+  file_num = generate_file_num(n-1+time_offset, nt_max);
+  oper_path = fullfile(oper_dir, [oper_label file_num '.mat']);
+  %fprintf([datestr(now) ' - Loading: ' oper_path '\n']);
+  load(oper_path,'C','K');
 
   dt = t(n+1) - t(n);
 
@@ -154,6 +176,7 @@ for n = nt-1 :-1: 1
   if save_flag
     file_num = generate_file_num(n, nt);
     grad_path = fullfile(working_dir, [grad_label file_num '.mat']);
+    %fprintf([datestr(now) ' - Saving:  ' grad_path '\n']);
     save(grad_path,'df_dx');
   end
 
@@ -164,6 +187,7 @@ for n = nt-1 :-1: 1
   if save_flag
     file_num = generate_file_num(n-1, nt);
     adjoint_path = fullfile(working_dir, [adj_label file_num '.mat']);
+    %fprintf([datestr(now) ' - Saving:  ' adjoint_path '\n']);
     save(adjoint_path,'y');
   end
 
@@ -177,7 +201,7 @@ end
 % the initial conditions of the tracer concentration field are dependent on the
 % volumetric source emission rate then compute the contribution of the initial conditions 
 % to the objective function gradient.
-if nargin < 9
+if nargin < 11
   temp = Cn'*(U'*((U*Kn'*U')\(U*y)));
   df_dx = df_dx + temp;
 end

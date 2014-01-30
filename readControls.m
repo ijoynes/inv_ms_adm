@@ -1,6 +1,6 @@
 function [simDir, operDir, domainPath, paramPath, sensorPath, ... 
   sourcePath, passPath, tMax, dt, noise, maxIter, reg_par, factr, ...
-  pgtol, m, iprint, save_flag] = readControls(filePath)
+  pgtol, m, iprint, save_flag, time_offset, nt_max] = readControls(filePath)
 %readControls reads an ASCII text file containing the values of the 
 % parameters that control the execution of the Inverse Mirco-Scale
 % Atmospheric Dispersion Model.
@@ -96,6 +96,13 @@ function [simDir, operDir, domainPath, paramPath, sensorPath, ...
 %               
 %               When iprint is not specified the default value of
 %               iprint = -1 is used to suppress all output
+%
+%  save_flag
+%
+%  time_offset  A positive integer variable that controls the number of 
+%               time-steps the flow conditions are offset from the 
+%               observations.  The default value is time_offset = 0
+%
 %-----------------------------------------------------------------------
 
 
@@ -115,6 +122,8 @@ factr   = 0;      % The default from lbfgs_options.m is actually 1E7
 m       = 5;      % default from lbfgs_options.m
 iprint  = -1;     % The default from lbfgs_options.m is actually 0
 save_flag = false;
+time_offset = 0;
+nt_max = 901;
 
 % open file control file and read the simulation control parameters
 fid = fopen(filePath,'r');
@@ -166,6 +175,10 @@ while ~feof(fid)
             else
                 save_flag = false;
             end
+        case 'time_offset'
+            time_offset = fscanf(fid,'%d',1);
+        case 'nt_max'
+            nt_max = fscanf(fid, '%d',1);
     end
 
     if ~feof(fid)
@@ -181,7 +194,7 @@ sourcePath = fullfile(simDir, sourceName);
 passPath   = fullfile(simDir,'pass.mat');
 
 % ensure that the parameters contain valid values
-operDir
+
 assert( exist( simDir, 'dir') == 7  );
 assert( exist(operDir, 'dir') == 7  );
 assert(   noise >= 0 || noise == -1 );
@@ -192,3 +205,5 @@ assert( reg_par >= 0 );
 assert(   factr >= 0 );
 assert(   pgtol >= 0 );
 assert(       m >  0 );
+assert( time_offset >= 0);
+assert( nt_max >= 1 );

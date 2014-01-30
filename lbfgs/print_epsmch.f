@@ -1,0 +1,4 @@
+      PROGRAM PRINT_EPSMCH
+        PRINT 10, dpmeps()
+   10   FORMAT(E72.50)
+      END PROGRAM PRINT_EPSMCH

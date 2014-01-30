@@ -233,7 +233,7 @@ lbfgs_mex_step(int nlhs, mxArray *plhs[],
     x = mxGetPr(plhs[0]);
     memcpy(x, l->x, l->n * sizeof(double));
 
-    plhs[1] = mxCreateDoubleScalar(rv);
+    plhs[1] = mxCreateScalarDouble(rv);
 }
 
 void

@@ -19,4 +19,5 @@ cd ..
 
 fprintf('Compiling Inverse Micro-Scale Atmospheric Dispersion Model...\n');
 mcc -m driver -O all -o inv_ms_adm
+system(['mv inv_ms_adm inv_ms_adm_', datestr(now,30)]);
 fprintf('Done.\n');

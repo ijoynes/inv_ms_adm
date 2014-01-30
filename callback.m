@@ -7,33 +7,33 @@ switch state
     % fprintf('------------------------------------------------------------------------------------------------------------\n');
   % fprintf('|       Date/Time      | Iter |      f       |    |proj g|   |      r^2      |      r       |     m/m*     |\n');
     % fprintf('------------------------------------------------------------------------------------------------------------\n');
-    fprintf('Start of emission source parameter inversion...\n\n');
-    fprintf('-------------------------------------------------------------------------------------------------------\n');
-    fprintf('|       Date/Time      | Iter |    fk/f0    | |pgk|/|pg0|  |      r^2     |      r      |    m/m*     |\n');
-    fprintf('-------------------------------------------------------------------------------------------------------\n');
+    fprintf(['\n' datestr(now) ' - Start of emission source parameter inversion...\n\n']);
+
     n = length(x);
     nt = length(t);
     nIters = opts.maxits+1;
     nReceptors = size(H,1);
     
     user_data.its = 1;
+
     user_data.m_star = m_star;
     user_data.s_star = s_star;
     user_data.s_b    = s_b;
     user_data.c_star = c_star;
 
-    user_data.f      = nan(1, nIters);
-    user_data.f_obs  = nan(1, nIters);
-    user_data.r      = nan(1, nIters);
-    user_data.r2     = nan(1, nIters);
-    user_data.m      = nan(1, nIters);
+    user_data.nfevals = nan(1, nIters);
+    user_data.f       = nan(1, nIters);
+    user_data.f_obs   = nan(1, nIters);
+    user_data.r       = nan(1, nIters);
+    user_data.r2      = nan(1, nIters);
+    user_data.m       = nan(1, nIters);
 
-    user_data.x      = nan(n, nIters);
-    user_data.s      = nan(n, nIters);
-    user_data.g      = nan(n, nIters);
-    user_data.g_proj = nan(n, nIters);
-    user_data.g_obs  = nan(n, nIters);
-    user_data.c      = nan(nt, nReceptors, nIters);
+    user_data.x       = nan(n, nIters);
+    user_data.s       = nan(n, nIters);
+    user_data.g       = nan(n, nIters);
+    user_data.g_proj  = nan(n, nIters);
+    user_data.g_obs   = nan(n, nIters);
+    user_data.c       = nan(nt, nReceptors, nIters);
 
   case 'iter'
     s = volumetric_emission_rate(x);
@@ -54,6 +54,7 @@ switch state
     m_norm = m/m_star;
 
     user_data.its = user_data.its + 1;
+    user_data.nfevals( iter.it + 1) = nfevals;
     user_data.f(   iter.it + 1) = f;
     user_data.f_obs(:, iter.it+1) = f_obs;
     user_data.g(:, iter.it + 1) = g;
@@ -67,18 +68,24 @@ switch state
     user_data.s(:,iter.it+1) = s;
     user_data.c(:,:,iter.it+1) = c;
 
-    fprintf('| %s | %4d | %8.5e |  %8.5e |  %9.5e | %8.5e | %8.5e |\n', datestr(now), iter.it, f/f_0, norm(g_proj,Inf)/norm(g_proj_0,Inf) ,r2,r,m_norm);
+    if r2 < 0 
+        fprintf('| %s | %4d | %7d | %8.5e | %8.5e | %9.5e | %8.5e | %8.5e |\n', datestr(now), iter.it, nfevals, f/f_0, norm(g_proj,Inf)/norm(g_proj_0,Inf) ,r2,r,m_norm);
+    else
+        fprintf('| %s | %4d | %7d | %8.5e | %8.5e |  %9.5e | %8.5e | %8.5e |\n', datestr(now), iter.it, nfevals, f/f_0, norm(g_proj,Inf)/norm(g_proj_0,Inf) ,r2,r,m_norm);
+    end
     
     file_num = generate_file_num(iter.it, max_iters + 1);
     results_path = fullfile(iter_dir, [iter_label, file_num, '.mat']);
-    save(results_path, 'f', 'f_obs', 'g', 'g_proj', 'g_obs', 's', 'x', 'c', 'r', 'r2', 'm', 'm_norm');
-
+    save(results_path, 'f', 'f_obs', 'g', 'g_proj', 'g_obs', 's', 'x', 'c', 'r', 'r2', 'm', 'm_norm', 'nfevals');
+    nfevals = 0;
   case 'done'
     % fprintf('------------------------------------------------------------------------------------------------------------\n');
-    fprintf('-------------------------------------------------------------------------------------------------------\n');
+    %fprintf('-------------------------------------------------------------------------------------------------------\n');
+    fprintf('----------------------------------------------------------------------------------------------------------------\n');
     fprintf('\n');
     
     % Save the initial values to the user_data array
+    user_data.nfevals(1) = 1;
     user_data.f(1) = f_0;
     user_data.g(:,1) = g_0;
     user_data.g_proj(:,1) = g_proj_0;
@@ -96,6 +103,7 @@ switch state
     n = user_data.its;
     user_data.iters = (0:n-1)';
 
+    user_data.nfevals = user_data.nfevals(1:n);
     user_data.f      = user_data.f(1:n);
     user_data.f_obs  = user_data.f_obs(1:n);
 

@@ -1,5 +1,5 @@
 function r_obs = solve_advection_diffusion_equation( s, t, H, ...
-                    save_flag, working_dir, operator_dir, theta, c_0 )
+                    save_flag, working_dir, operator_dir,  c_type, time_offset,nt_max,theta, c_0  )
 %solve_advection_diffusion_equation numerically models the transport 
 % of a tracer from volumetric emission source and returns matrix of 
 % the receptor observations.
@@ -145,7 +145,7 @@ global gd_idx gd_val
 %-----------------------------------------------------------------------
 % Ensure the require number of arguments are supplied.
 assert( nargin >= 6, 'ERROR: too few function arguments'  ); 
-assert( nargin <= 8, 'ERROR: too many function arguments' ); 
+assert( nargin <= 11, 'ERROR: too many function arguments' ); 
 
 % Check s
 assert( isvector(s), 'ERROR: arg #1 was expecting a numeric vector' );                % ensure s is a vector
@@ -186,8 +186,34 @@ assert( ischar(operator_dir) ); % ensure operator_dir is a string
 assert( exist( operator_dir, 'dir') == 7 );   % ensure the operator
                                               %   directory exists
 
+% If c_type is supplied make sure it contains valid data.
+if nargin >= 7                        % if c_type is supplied
+  assert( ischar(c_type) );           % ensure c_type is a char
+  assert( c_type == 'k' | c_type == 'm' );  % ensure c_type is a valid value
+else
+  c_type = 'm'; % default value
+end
+
+% If time_offset is supplied make sure it contains valid data.
+if nargin >= 8                        % if time_offset is supplied
+  assert( isscalar(time_offset) );    % ensure time_offset is a scalar
+  assert( time_offset >= 0 );         % ensure time_offset is a valid value
+else
+  time_offset = 0; % default value
+end
+
+% If time_offset is supplied make sure it contains valid data.
+if nargin >= 9                        % if nt_max is supplied
+  assert( isscalar(nt_max) );    % ensure nt_max is a scalar
+  assert( nt_max >= 1 );         % ensure nt_max is a valid value
+else
+  nt_max = nt; % default value
+end
+
+
+
 % If theta is supplied make sure it contains valid data.
-if nargin >= 7                        % if theta is supplied
+if nargin >= 10                        % if theta is supplied
   assert( isscalar(theta) );          % ensure theta is a scalar
   assert( isnumeric(theta) );         % ensure theta is a number
   assert( 0 <= theta && theta <= 1 ); % ensure 0  <= theta <= 1
@@ -198,7 +224,7 @@ end
 % If c_0 is supplied make sure it contains valid data.  If c_0 is not 
 % supplied then the initial condition is assumed to be the steady 
 % state concentration distribution for the initial flow conditions.
-if nargin == 8              % if c_0 is supplied
+if nargin == 11              % if c_0 is supplied
   assert( isnumeric(c_0) ); % ensure c_0 is numeric array
   assert( isvector(c_0) );  % ensure c_0 is a vector(or scalar 1-by-1)
   if isscalar(c_0)          % constant initial condition
@@ -210,7 +236,7 @@ if nargin == 8              % if c_0 is supplied
     assert( length(c_0) == size(H,2));  % ensure dimensions of H and 
   end                                   %   c_0 agree
 end
-%---------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 conc_label = 'Concentration_';
 oper_label = 'Operators_';
@@ -220,12 +246,19 @@ nReceptors = size(H, 1);
 r_obs = nan(nt, nReceptors);
 
 
-uPath = fullfile(operator_dir, '..', 'U.mat');
+%uPath = fullfile(operator_dir, '..', 'U.mat');
+uPath = fullfile(operator_dir, 'U.mat');
 load(uPath);
 
 % load the initial operators 
-file_num = generate_file_num(0, nt);
+if c_type == 'k'
+  file_num = generate_file_num(0, nt_max);
+elseif c_type == 'm'
+  file_num = generate_file_num(time_offset, nt_max);
+end
+
 operator_path = fullfile(operator_dir, [oper_label file_num '.mat']);
+%fprintf([datestr(now) ' - Loading: ' operator_path '\n']);
 load( operator_path, 'C', 'K' );
 Cn = C;
 Kn = K;
@@ -233,7 +266,7 @@ Kn = K;
 
 % Compute initial concentration distribution from a steady state
 % solution of the source with in initial flow conditions.
-if nargin < 8
+if nargin < 11
   c_0 = U'*((U*Kn*U')\(U*Cn*s));  % compute the initial concentration
   % A = Kn;
   % b = Cn*s;
@@ -249,21 +282,29 @@ r_obs(1, :) = (H*c)';   % compute the initial receptor observations
 
 % Save discretized tracer concentration field if it is desired.
 if save_flag
-  % It is unnecessary to recompute file_num because it will have the 
-  % same value previous from the operator load.
   file_num = generate_file_num(0, nt);
   working_path = fullfile( working_dir, ...
                   [conc_label, file_num, '.mat'] );
+  %fprintf([datestr(now) ' - Saving:  ' working_path '\n']);
   save(working_path, 'c');
 end
 
 % Compute the transient evolution of tracer concentration within the
 % domain and the associated receptor observations
+%fprintf('nt = %d\n', nt);
+%fprintf('length(t) = %d\n', length(t));
+%fprintf('time_offset = %d\n', time_offset);
+
 for n = 1 : nt - 1
-  file_num = generate_file_num(n, nt);
+  if c_type == 'k'
+    file_num = generate_file_num(n, nt_max);
+  elseif c_type == 'm'
+    file_num = generate_file_num(n+time_offset, nt_max);
+  end
   operator_path = fullfile(operator_dir, ...
                     [oper_label, file_num, '.mat'] );
 
+  %fprintf([datestr(now) ' - Loading: ' operator_path '\n']);
   load(operator_path,'C','K');
   dt = t(n+1) - t(n);
   A = U*(C/dt+theta*K)*U';
@@ -287,12 +328,17 @@ for n = 1 : nt - 1
     file_num = generate_file_num(n, nt);
     working_path = fullfile(working_dir, ...
                     [conc_label, file_num, '.mat'] );
+    %fprintf([datestr(now) ' - Saving:  ' working_path '\n']);
     save(working_path, 'c');
   end
   r_obs(n+1,:) = (H*c)';
   Cn = C;
   Kn = K;
 end
+
+
+
+
 
 %function receptor_observations = solve_advection_diffusion_equation(t,E,c_0,type,noise)
 %global simDir operDir, H
