@@ -7,27 +7,27 @@ cdf_threshold = [.999 .99 .95 .9];
 
 beta = [0,1,10,100,1000,0,1,10,100,1000]';
 
-run_dir = {fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_058');
-    fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_059');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_060');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_061');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_062');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_063');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_064');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_065');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_066');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_067'); };
+%run_dir = {fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_058');
+%    fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_059');
+%   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_060');
+%   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_061');
+%   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_062');
+%   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_063');
+%   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_064');
+%   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_065');
+%   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_066');
+%   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_067'); };
 
-run_dir = {fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_031');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_068');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_069');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_070');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_071');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_046');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_055');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_047');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_045');
-   fullfile('C:', 'Users', 'ijoynes', 'Documents', 'run_048') };
+run_dir = {fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_031');
+   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_068');
+   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_069');
+   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_070');
+   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_071');
+   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_046');
+   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_055');
+   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_047');
+   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_045');
+   fullfile('E:', 'ijoynes', 'thesis_data_backup', 'run_048') };
 
 run_name = {'No noise, No reg';
     'No noise, theta = 1';

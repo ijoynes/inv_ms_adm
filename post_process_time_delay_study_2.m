@@ -32,9 +32,9 @@ dir_name = {'E:\ijoynes\thesis_data_backup\run_072', ...
 
 nRuns = length(dir_name);
 time_delay = [0, 1, 2, 5, 10, 20, 30, 60]';
-nIters = 10;
-f_all = nan(nIters+1,nRuns);
-g_norm_all = nan(nIters+1,nRuns);
+nIters = [36, 39, 38, 39, 23, 23, 42, 42]';
+f_all = nan(max(nIters)+1,nRuns);
+g_norm_all = nan(max(nIters)+1,nRuns);
 tecplot_dat_file_path = 'E:\ijoynes\thesis_data_backup\time_delay_study.dat';
 tecplot_plt_file_path = 'E:\ijoynes\thesis_data_backup\time_delay_study.plt';
 
@@ -80,7 +80,7 @@ fprintf(fid, '%d %d %d\n', tri');
 
 for i = 1:nRuns
     fprintf('Writing Run #%d ...\n',i+71);
-    for j = 0:10
+    for j = 0:nIters(i)
         file_num = generate_file_num(j, 200);
         load(fullfile(dir_name{i}, 'Source', ['Source_' file_num '.mat']),'s','g','g_proj','f')
         f_all(j+1,i) = f;
@@ -108,11 +108,11 @@ for i = 1 : nRuns
 fprintf(fid, '\nZONE\n');
 fprintf(fid, 'T = "Convergence: TD = %d"\n', i);
 fprintf(fid, 'ZONETYPE = ORDERED\n');
-fprintf(fid, 'I = %d\n', nIters+1);
+fprintf(fid, 'I = %d\n', nIters(i)+1);
 fprintf(fid, 'PASSIVEVARLIST = [1-5]\n');
-fprintf(fid, '%d\n', 0:nIters);
-fprintf(fid, '%e\n', f_all(:,i));
-fprintf(fid, '%e\n', g_norm_all(:,i));
+fprintf(fid, '%d\n', 0:nIters(i));
+fprintf(fid, '%e\n', f_all(1:nIters(i)+1,i));
+fprintf(fid, '%e\n', g_norm_all(1:nIters(i)+1,i));
 end
 
 fclose(fid);

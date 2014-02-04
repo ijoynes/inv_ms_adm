@@ -1,6 +1,6 @@
 function [simDir, operDir, domainPath, paramPath, sensorPath, ... 
   sourcePath, passPath, tMax, dt, noise, maxIter, reg_par, factr, ...
-  pgtol, m, iprint, save_flag, time_offset, nt_max] = readControls(filePath)
+  pgtol, m, iprint, save_flag, time_offset, nt_max, est_min] = readControls(filePath)
 %readControls reads an ASCII text file containing the values of the 
 % parameters that control the execution of the Inverse Mirco-Scale
 % Atmospheric Dispersion Model.
@@ -124,6 +124,7 @@ iprint  = -1;     % The default from lbfgs_options.m is actually 0
 save_flag = false;
 time_offset = 0;
 nt_max = 901;
+est_min = false;
 
 % open file control file and read the simulation control parameters
 fid = fopen(filePath,'r');
@@ -179,6 +180,13 @@ while ~feof(fid)
             time_offset = fscanf(fid,'%d',1);
         case 'nt_max'
             nt_max = fscanf(fid, '%d',1);
+        case 'est_min'
+            temp = fscanf(fid, '%s', 1);
+            if strcmpi(temp, 'true')
+                est_min = true;
+            else
+                est_min = false;
+            end
     end
 
     if ~feof(fid)

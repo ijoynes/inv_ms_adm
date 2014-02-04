@@ -90,7 +90,7 @@ fprintf('-----------------------------------------------------------------------
 fprintf('controls_file_path = %s\n', controls_file_path);
 [sim_dir, oper_dir, domainPath, paramPath, sensorPath, sourcePath, ... 
   passPath, tMax, dt, noise, max_iters, reg_par ...
-  factr, pgtol, m, iprint, save_flag, time_offset, nt_max] = readControls(controls_file_path)
+  factr, pgtol, m, iprint, save_flag, time_offset, nt_max, est_min] = readControls(controls_file_path)
 fprintf('\n');
 
 fprintf('\n');
@@ -197,13 +197,6 @@ fprintf(['\n' datestr(now) ' - Computing discretized volumetric emission rate of
 s_star = place_sources(tri, xy, source_xy, source_m);
 %-----------------------------------------------------------------------
 
-%-----------------------------------------------------------------------
-% Compute the total emission rate in kg/s of the known source by 
-% integrating the volumetric source emission rate over the spatial 
-% domain.  This integration is approximated numerically with the 
-% spatial integration weight vector.  
-m_star = dot(space_int_wgt, s_star);
-%-----------------------------------------------------------------------
 
 % Reorient the domain such that the lower left corner has the 
 % coordinate (0,0)
@@ -214,37 +207,62 @@ t = (0:dt:tMax)';
 nt = length(t);
 
 
+
+if est_min == false
+  %-----------------------------------------------------------------------
+% Compute the total emission rate in kg/s of the known source by 
+% integrating the volumetric source emission rate over the spatial 
+% domain.  This integration is approximated numerically with the 
+% spatial integration weight vector.  
+m_star = dot(space_int_wgt, s_star);
+%-----------------------------------------------------------------------
+
 % ----------------------------------------------------------------------
 % If an initial source guess is present in the file path
 %   sim_dir/Source/Source_0.mat
 % then load that initial guess.  However if no initial guess is present
 % assume an all zero initial guess and save it.
-file_num = generate_file_num(0, nt);
-if exist(fullfile(iter_dir,[iter_label file_num '.mat'])) == 2
-  load(fullfile(iter_dir,[iter_label file_num '.mat']), 'x');
-  s = volumetric_emission_rate(x);
-  save(fullfile(iter_dir,[iter_label file_num '.mat']), 's', '-append');
-else
-  x = zeros(nNodes,1);
-  s = volumetric_emission_rate(x);
-  save(fullfile(iter_dir,[iter_label file_num '.mat']), 'x', 's');
+  file_num = generate_file_num(0, nt);
+  if exist(fullfile(iter_dir,[iter_label file_num '.mat'])) == 2
+    load(fullfile(iter_dir,[iter_label file_num '.mat']), 'x');
+    s = volumetric_emission_rate(x);
+    save(fullfile(iter_dir,[iter_label file_num '.mat']), 's', '-append');
+  else
+    x = zeros(nNodes,1);
+    s = volumetric_emission_rate(x);
+    save(fullfile(iter_dir,[iter_label file_num '.mat']), 'x', 's');
+  end
+
+  % Save the volumetric source emission rate profile of the known source 
+  % with its total emission rate.
+  save(fullfile(iter_dir, [iter_label 'Correct.mat']), 's_star','m_star');
+
+
+  % Compute the synthetic receptor observation from the known source.
+  fprintf(['\n' datestr(now) ' - Computing synthetic receptor observations...\n']);
+  c_star_without_noise = solve_advection_diffusion_equation(s_star, t, H, save_flag, obs_dir, oper_dir,'k',time_offset, nt_max,0.5);
+
+  % Add Gaussian distributed noise to the synthetic receptor observations.
+  c_star = add_observation_noise(c_star_without_noise, noise);
+
+  % Append the synthetic receptor observations to the known source file.
+  save(fullfile(iter_dir,[iter_label 'Correct.mat']),'c_star', 'c_star_without_noise', '-append');
+
+else % ESTIMATE THE MINIMUM OF THE OBJECTIVE FUNCTION FROM THE KNOWN EMISSION SOURCE PROFILE
+  assert(exist(fullfile(iter_dir,[iter_label '_Correct.mat'])) == 2, ['ERROR: Unable to locate ', fullfile(iter_dir,[iter_label '_Correct.mat'])]);
+
+  
+    load(fullfile(iter_dir,[iter_label '_Correct.mat']), 'E', 'signal_o');
+    c_star = signal_o;
+    s_star = E;
+    x = E;
+    s = volumetric_emission_rate(x);
+    m_star = dot(space_int_wgt, s_star);
+    file_num = generate_file_num(0, nt);
+    save(fullfile(iter_dir,[iter_label file_num '.mat']), 's', 'x' );
+    save(fullfile(iter_dir,[iter_label '_Correct.mat']), 'c_star', 's_star','m_star', '-append');
+
 end
-
-% Save the volumetric source emission rate profile of the known source 
-% with its total emission rate.
-save(fullfile(iter_dir, [iter_label 'Correct.mat']), 's_star','m_star');
-
-
-% Compute the synthetic receptor observation from the known source.
-fprintf(['\n' datestr(now) ' - Computing synthetic receptor observations...\n']);
-c_star_without_noise = solve_advection_diffusion_equation(s_star, t, H, save_flag, obs_dir, oper_dir,'k',time_offset, nt_max,0.5);
-
-% Add Gaussian distributed noise to the synthetic receptor observations.
-c_star = add_observation_noise(c_star_without_noise, noise);
-
-% Append the synthetic receptor observations to the known source file.
-save(fullfile(iter_dir,[iter_label 'Correct.mat']),'c_star', 'c_star_without_noise', '-append');
-
 % These should be global variables
 %%%%save(paramPath,'t', 'c_0', 'boundary', 'sensorIndex','nNodes', 'nt','tri','xy','E')
 % This should also be a global variable
